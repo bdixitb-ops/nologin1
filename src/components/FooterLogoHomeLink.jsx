@@ -1,0 +1,31 @@
+"use client";
+
+import Image from "next/image";
+import { usePathname } from "next/navigation";
+
+export default function FooterLogoHomeLink() {
+  const pathname = usePathname();
+
+  return (
+    <a
+      href="/#home-hero"
+      className="home-v2-footer-logo-link"
+      aria-label="NoLogin — back to top"
+      onClick={(e) => {
+        if (pathname === "/") {
+          e.preventDefault();
+          document.getElementById("home-hero")?.scrollIntoView({ behavior: "smooth" });
+        }
+      }}
+    >
+      <Image
+        src="/nologin-logo-icon.svg"
+        alt=""
+        width={44}
+        height={44}
+        className="home-v2-footer-logo"
+        unoptimized
+      />
+    </a>
+  );
+}
