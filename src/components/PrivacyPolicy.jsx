@@ -11,7 +11,7 @@ export default function PrivacyPolicy() {
           heading: "",
           paragraphs: [
             "NoLogin is committed to being transparent about how we handle your data. We built this product on a simple principle: no login, no unnecessary data collection.",
-            "Last updated: May 2025",
+            "Last updated: May 2026",
           ],
         },
         {

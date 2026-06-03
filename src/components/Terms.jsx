@@ -11,7 +11,7 @@ export default function Terms() {
           heading: "",
           paragraphs: [
             "Understanding Your Rights and Responsibilities on NoLogin",
-            "Last updated: May 2025",
+            "Last updated: May 2026",
           ],
         },
         {

@@ -32,6 +32,9 @@ export default function SiteHeader() {
         <span />
       </button>
       <nav className={`home-v2-links ${mobileMenuOpen ? "home-v2-links-open" : ""}`}>
+        <Link href="/" onClick={() => setMobileMenuOpen(false)}>
+          Home
+        </Link>
         <Link href="/about" onClick={() => setMobileMenuOpen(false)}>
           About
         </Link>
