@@ -13,7 +13,7 @@ export default function ShareCodeOnline() {
         title: "Share Code Online",
         subtext: (
           <>
-            Paste your code, pick a page name, share the link.
+            pick a page name, paste your code,share the link.
             <br />
             No login. No GitHub. No account. Live in seconds.
           </>

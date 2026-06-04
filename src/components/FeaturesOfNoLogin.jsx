@@ -2,6 +2,7 @@
 
 import { ChevronRight, Download, FileText, Laptop, Monitor, Smartphone } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 
 function FeatureIcon({ src, alt = "" }) {
   return (
@@ -212,14 +213,11 @@ export default function FeaturesOfNoLogin() {
         <section className="about-page-hero">
           <p className="about-page-kicker">• FEATURES</p>
           <h1 className="about-page-title">
-            <span className="about-page-title-row about-page-title-strong">Everything you</span>
-            <span className="about-page-title-row">
-              <span className="about-page-title-accent">need</span>
-              <span className="about-page-title-strong">.</span>
+            <span className="about-page-title-row about-page-title-strong">
+              Everything you need to share anything instantly.
             </span>
-            <span className="about-page-title-row about-page-title-muted">Nothing you don&apos;t.</span>
           </h1>
-          <p className="features-page-hero-sub">Instant sharing with the controls that actually matter.</p>
+          <p className="features-page-hero-sub">No account. No friction. No cleanup. Just a page name.</p>
         </section>
 
         <section className="features-page-spotlight" aria-labelledby="features-device-heading">
@@ -287,6 +285,21 @@ export default function FeaturesOfNoLogin() {
           />
           <CollaborationVisual />
         </section>
+
+        <div className="about-page-grid about-page-mission">
+          <div className="about-page-cell about-page-mission-copy">
+            <p className="about-page-mission-lead">
+              Everything you need to share anything{" "}
+              <span className="about-page-mission-accent">instantly.</span>
+            </p>
+            <p className="about-page-mission-sub">No account. No friction. No cleanup. Just a page name.</p>
+          </div>
+          <div className="about-page-cell about-page-mission-cta">
+            <Link href="/" className="about-page-cta">
+              Try NoLogin →
+            </Link>
+          </div>
+        </div>
       </div>
     </div>
   );

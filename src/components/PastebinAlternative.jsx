@@ -8,13 +8,13 @@ export default function PastebinAlternative() {
       pageClass="pastebin-page"
       faqId="pastebin-faq"
       hero={{
-        badge: "Your link. Your page name.",
-        title: "The Best Pastebin Alternative",
+        badge: "Pastebin. Without the baggage.",
+        title: "Pastebin Alternative",
         subtext: (
           <>
-            Instant text and file sharing with no login.
+            Pastebin got complicated. This didn't
             <br />
-            Custom page names, password protection and expiry control. Free.
+            Custom page names, file uploads, passwords and expiry
           </>
         ),
       }}
@@ -80,8 +80,8 @@ export default function PastebinAlternative() {
           },
           {
             num: 4,
-            title: "No ads",
-            body: "NoLogin has no ads cluttering the interface. The page loads fast and gets out of your way.",
+            title: "Clean by design.",
+            body: "Open the page, paste your content, share the link. That's it.",
           },
         ],
       }}
@@ -129,10 +129,6 @@ export default function PastebinAlternative() {
           {
             title: "Password protection",
             body: "Restrict who can view your page without creating an account on either end.",
-          },
-          {
-            title: "Fully free",
-            body: "No paid plan, no feature wall, no credit card. All of this without logging in.",
           },
         ],
       }}

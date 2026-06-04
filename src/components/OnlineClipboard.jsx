@@ -13,7 +13,7 @@ export default function OnlineClipboard() {
         title: "Online Clipboard",
         subtext: (
           <>
-            Copy something on your phone. Open it on your laptop.
+            Upload on your phone. Open it on your laptop.
             <br />
             No cable. No app. No login. Just a page name.
           </>
@@ -23,7 +23,7 @@ export default function OnlineClipboard() {
         kicker: "THE PROBLEM WITH MOVING CONTENT BETWEEN DEVICES",
         title: "Every obvious solution has friction.",
         paragraphs: [
-          "You are working on your phone and need something on your laptop. Or you are on one computer and need to get a file to another. Email, Bluetooth, USB cables, AirDrop, cloud storage, messaging apps — all turn a ten-second task into many steps.",
+          "You are working on your phone and need something on shared computer system or vice versa. Or you are on one computer and need to get a file to another. Email, Bluetooth, USB cables, AirDrop, cloud storage, messaging apps — all turn a ten-second task into many steps.",
           "There is no built-in way to just move something from one device to another quickly without setup, cables or accounts.",
           "NoLogin works like a clipboard that lives on the internet and is accessible from any device with a browser. Open nologin.in, type a page name, paste your text or upload your file, and open the same page name on your other device.",
         ],
@@ -39,15 +39,15 @@ export default function OnlineClipboard() {
         items: [
           {
             title: "Moving text between devices",
-            body: "Copy a URL, password, address, or block of text on your phone. Open NoLogin, type your page name, paste, save. Switch to your laptop, open the same page name, copy. Done in under fifteen seconds.",
+            body: "Copy a URL, password, address, or block of text on your phone. Open NoLogin, type your page name, paste, save. Switch to any system, open the same page name, copy. Done in under fifteen seconds.",
           },
           {
             title: "Moving files between devices",
-            body: "Upload a photo, document, PDF or code file on your phone. Open the same page name on your laptop and download. No cable, no account, no app.",
+            body: "Upload a photo, document, PDF or code file on your phone. Open the same page name on any system and download. No cable, no account, no app.",
           },
           {
             title: "Moving content in a lab",
-            body: "Upload your work to a NoLogin page at the start of the session. Access it from any computer in the lab by typing the page name. No pendrive, no email.",
+            body: "Upload your work to a NoLogin page at the start of the session. Access it from any computer in the lab by typing the page name. No pendrive, no email login.",
           },
           {
             title: "Sharing with someone else",

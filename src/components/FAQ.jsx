@@ -165,7 +165,7 @@ function FaqPageCta() {
         </div>
       </div>
       <div className="about-page-cell about-page-mission-cta">
-        <Link href="/#home-hero" className="about-page-cta">
+        <Link href="/" className="about-page-cta">
           Try NoLogin →
         </Link>
       </div>

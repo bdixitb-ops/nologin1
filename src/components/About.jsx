@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from "react";
 const ABOUT_STATS = [
   { id: "users", kind: "count", target: 72, suffix: "K+", label: "Users worldwide" },
   { id: "countries", kind: "count", target: 138, suffix: "", label: "Countries reached" },
-  { id: "founded", kind: "text", value: "Nov '24", label: "Founded" },
+  { id: "launched", kind: "text", value: "Nov '24", label: "Launched" },
   { id: "accounts", kind: "count", target: 0, suffix: "", label: "Accounts needed. Ever." },
 ];
 
@@ -153,7 +153,7 @@ export default function About() {
             <p className="about-page-mission-sub">No login. No signup. No pendrives. Just a page name.</p>
           </div>
           <div className="about-page-cell about-page-mission-cta">
-            <Link href="/#home-hero" className="about-page-cta">
+            <Link href="/" className="about-page-cta">
               Try NoLogin →
             </Link>
           </div>

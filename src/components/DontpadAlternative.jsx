@@ -9,12 +9,12 @@ export default function DontpadAlternative() {
       faqId="dontpad-faq"
       hero={{
         badge: "Everything Dontpad does. And more.",
-        title: "The Best Dontpad Alternative",
+        title: "Dontpad Alternative",
         subtext: (
           <>
-            File uploads, password protection, edit lock and expiry control.
+            All the controls Dontpad never gave you.
             <br />
-            Free. No login. No signup.
+            Text, files , passwords, edit lock and expiry
           </>
         ),
       }}
@@ -47,14 +47,6 @@ export default function DontpadAlternative() {
             title: "No expiry control",
             body: "Content on Dontpad stays up indefinitely unless someone manually deletes it. You cannot set a timer and have it disappear automatically.",
           },
-          {
-            title: "Guessable URLs",
-            body: "Because Dontpad uses simple words as page names, pages are easy to stumble across. Common names are often already taken.",
-          },
-          {
-            title: "No file support for developers",
-            body: "Sharing code as plain text works but sharing actual files, configs or builds is not possible.",
-          },
         ],
       }}
       how={{
@@ -81,7 +73,6 @@ export default function DontpadAlternative() {
             num: 4,
             title: "Expiry control",
             body: "Set your page to automatically delete after 1 hour, 48 hours, or 7 days. No cleanup needed.",
-            url: "nologin.in/notes",
           },
         ],
       }}
@@ -103,13 +94,11 @@ export default function DontpadAlternative() {
             pill: "EDIT LOCK",
             title: "Someone deleted your content",
             body: "Edit lock prevents others from overwriting or deleting what you shared.",
-            urls: ["nologin.in/labcode"],
           },
           {
             pill: "EXPIRY",
             title: "Old content stayed up too long",
             body: "Expiry timers handle cleanup automatically — nothing sits online longer than you need.",
-            urls: ["nologin.in/slides"],
           },
         ],
       }}
@@ -129,10 +118,6 @@ export default function DontpadAlternative() {
           {
             title: "Password, edit lock, file uploads, expiry",
             body: "Features that matter the moment you try to use a no-login sharing tool for anything beyond the simplest text paste.",
-          },
-          {
-            title: "Free forever",
-            body: "No trial period, no paid tier, no credit card. Everything works without an account.",
           },
         ],
       }}
