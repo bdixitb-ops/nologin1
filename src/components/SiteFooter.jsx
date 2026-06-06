@@ -7,7 +7,11 @@ export default function SiteFooter() {
       <div className="home-v2-footer-grid">
         <div className="home-v2-footer-col home-v2-footer-brand-col">
           <FooterLogoHomeLink />
-          <p className="home-v2-footer-brand-copy">The fastest way to share online.</p>
+          <p className="home-v2-footer-brand-copy">
+            The fastest way to
+            <br />
+            share online.
+          </p>
           <p className="home-v2-footer-brand-since">Since Nov 2024</p>
         </div>
 

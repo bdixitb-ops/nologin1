@@ -1,9 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useId, useMemo, useState } from "react";
-import { toast, ToastContainer } from "react-toastify";
 
 const FAQS = [
   {
@@ -121,55 +119,21 @@ function FaqAccordionItem({ question, answer }) {
 }
 
 function FaqPageCta() {
-  const [domainName, setDomainName] = useState("");
-  const router = useRouter();
-
-  const goToPage = () => {
-    const name = domainName.trim().toLowerCase();
-    if (!name) {
-      toast.error("Enter a page name.");
-      return;
-    }
-    router.push(`/${name}`);
-  };
-
   return (
-    <section className="faq-page-cta about-page-grid about-page-mission" aria-label="Try NoLogin">
-      <div className="about-page-cell faq-page-cta-form">
-        <p className="about-page-mission-lead">
-          <span className="about-page-mission-accent">No login. No signup.</span> Just a page name.
+    <div className="about-page-grid about-page-mission">
+      <div className="about-page-cell about-page-mission-copy">
+        <p className="about-page-mission-lead faq-page-mission-lead">
+          Understanding it took two minutes.
+          <br />
+          <span className="about-page-mission-accent">Using it takes ten seconds.</span>
         </p>
-        <div className={`home-v2-input-row ${domainName.trim() ? "home-v2-input-row-active" : ""}`}>
-          <span className="home-v2-prefix">nologin.in/</span>
-          <input
-            type="text"
-            placeholder="Enter page name"
-            value={domainName}
-            onChange={(e) => setDomainName(e.target.value.toLowerCase())}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                goToPage();
-              }
-            }}
-            aria-label="Page name"
-          />
-        </div>
-        <div className="home-v2-submit-row">
-          <button
-            type="button"
-            onClick={goToPage}
-            className={`home-v2-submit-btn ${domainName.trim() ? "home-v2-submit-btn-active" : ""}`}
-          >
-            Submit
-          </button>
-        </div>
       </div>
       <div className="about-page-cell about-page-mission-cta">
         <Link href="/" className="about-page-cta">
           Try NoLogin →
         </Link>
       </div>
-    </section>
+    </div>
   );
 }
 
@@ -178,7 +142,6 @@ export default function FAQ() {
 
   return (
     <div className="about-page faq-page">
-      <ToastContainer />
       <div className="about-page-inner">
         <section className="about-page-hero">
           <p className="about-page-kicker">FAQ</p>

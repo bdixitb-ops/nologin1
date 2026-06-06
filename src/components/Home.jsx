@@ -5,7 +5,7 @@ import {
   deleteExpiredDocument,
   isDocumentExpired,
 } from "@/lib/documentExpiry";
-import { firestore, storage } from "@/lib/firebase";
+import { firestore, isFirebaseConfigured, storage } from "@/lib/firebase";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 import Image from "next/image";
 import Link from "next/link";
@@ -141,8 +141,15 @@ export default function Home() {
   };
 
   const handleSubmit = async () => {
-    if (!domainName.trim()) {
+    const pageName = domainName.trim().toLowerCase();
+
+    if (!pageName) {
       toast.error("Enter a page name.");
+      return;
+    }
+
+    if (!isFirebaseConfigured()) {
+      toast.error("App is not connected to Firebase. Check deployment environment variables.");
       return;
     }
 
@@ -152,7 +159,7 @@ export default function Home() {
     }
 
     try {
-      const docRef = doc(firestore, "documents", domainName);
+      const docRef = doc(firestore, "documents", pageName);
       const docSnap = await getDoc(docRef);
       const currentTime = Date.now();
       let domainWasDeleted = false;
@@ -161,7 +168,7 @@ export default function Home() {
         const data = docSnap.data();
 
         if (isDocumentExpired(data, currentTime)) {
-          await deleteExpiredDocument(storage, firestore, domainName);
+          await deleteExpiredDocument(storage, firestore, pageName);
           toast.warn("This domain has expired and has been automatically deleted. Creating new domain...");
           domainWasDeleted = true;
           const verifyDelete = await getDoc(docRef);
@@ -170,7 +177,7 @@ export default function Home() {
             return;
           }
         } else {
-          router.push(`/${domainName}`);
+          router.push(`/${pageName}`);
           return;
         }
       }
@@ -191,12 +198,17 @@ export default function Home() {
         });
 
         toast.success("Domain created successfully!");
-        router.push(`/${domainName}`);
+        router.push(`/${pageName}`);
       } else {
-        router.push(`/${domainName}`);
+        router.push(`/${pageName}`);
       }
-    } catch {
-      toast.error("Error setting document settings.");
+    } catch (error) {
+      console.error("Domain creation failed:", error);
+      if (error?.code === "permission-denied") {
+        toast.error("Firebase blocked this request. Add your Vercel domain to API key restrictions and Firestore rules.");
+      } else {
+        toast.error("Error setting document settings.");
+      }
     }
   };
 

@@ -12,8 +12,6 @@ import { downloadStorageFile } from "@/lib/downloadFile";
 import { firestore, storage } from "@/lib/firebase";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import FileUploadIcon from "@mui/icons-material/FileUpload";
-import InstagramIcon from "@mui/icons-material/Instagram";
-import LinkedInIcon from "@mui/icons-material/LinkedIn";
 import HomeOutlinedIcon from "@mui/icons-material/HomeOutlined";
 import LockIcon from "@mui/icons-material/Lock";
 import NotesIcon from "@mui/icons-material/Notes";
@@ -338,14 +336,14 @@ export default function TextEditor({ domainName }) {
     if (!e.target.files?.[0]) return;
     const file = e.target.files[0];
     const maxFiles = 5;
-    const maxFileSizeBytes = 200 * 1024 * 1024;
+    const maxFileSizeBytes = 100 * 1024 * 1024;
 
     if (isLocked && !sessionEditable) {
       notifyLockedForEdit();
       return;
     }
     if (file.size > maxFileSizeBytes) {
-      toast.error("File size exceeds the 200MB limit. Please upload a smaller file.");
+      toast.error("File size exceeds the 100MB limit. Please upload a smaller file.");
       return;
     }
     if (files.length >= maxFiles) {
@@ -517,9 +515,9 @@ export default function TextEditor({ domainName }) {
                   </div>
                 ) : (
                   <div className="editor-files-pane" role="tabpanel">
-                    <div className={`file-upload ${files.length > 0 ? "has-files" : ""}`}>
-                      <input type="file" ref={fileInputRef} onChange={handleFileChange} style={{ display: "none" }} />
+                    <input type="file" ref={fileInputRef} onChange={handleFileChange} style={{ display: "none" }} />
 
+                    <div className="editor-files-content">
                       {files.length > 0 ? (
                         <div className="uploaded-files">
                           {files.map((file, index) => (
@@ -554,8 +552,12 @@ export default function TextEditor({ domainName }) {
                             </div>
                           ))}
                         </div>
-                      ) : null}
+                      ) : (
+                        <p className="editor-files-placeholder">Upload file and hit save button</p>
+                      )}
+                    </div>
 
+                    <div className="editor-files-actions">
                       <button
                         type="button"
                         onClick={() => {
@@ -565,21 +567,13 @@ export default function TextEditor({ domainName }) {
                           }
                           fileInputRef.current?.click();
                         }}
-                        className="upload-button"
+                        className="editor-toolbar-btn editor-upload-file-btn"
                       >
-                        <FileUploadIcon />
-                        {isUploading ? "Uploading..." : "Upload File"}
+                        <FileUploadIcon className="editor-upload-file-btn-icon" aria-hidden />
+                        <span className="editor-set-time-label">
+                          {isUploading ? "Uploading..." : "Upload File"}
+                        </span>
                       </button>
-                    </div>
-
-                    <div className="editor-files-social">
-                      <span>Follow us on</span>
-                      <a href="https://www.instagram.com/nologin.in" target="_blank" rel="noopener noreferrer">
-                        <InstagramIcon className="social-icon" />
-                      </a>
-                      <a href="https://www.linkedin.com/company/nologin-in/" target="_blank" rel="noopener noreferrer">
-                        <LinkedInIcon className="social-icon" />
-                      </a>
                     </div>
                   </div>
                 )}
