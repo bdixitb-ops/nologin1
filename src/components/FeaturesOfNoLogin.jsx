@@ -211,13 +211,16 @@ export default function FeaturesOfNoLogin() {
     <div className="about-page features-page">
       <div className="about-page-inner">
         <section className="about-page-hero">
-          <p className="about-page-kicker">• FEATURES</p>
+          <p className="about-page-kicker">FEATURES</p>
           <h1 className="about-page-title">
-            <span className="about-page-title-row about-page-title-strong">
-              Everything you need to share anything instantly.
+            <span className="about-page-title-row about-page-title-strong">Everything you</span>
+            <span className="about-page-title-row">
+              <span className="about-page-title-accent">need</span>
+              <span className="about-page-title-strong">.</span>
             </span>
+            <span className="about-page-title-row about-page-title-muted">Nothing you don&apos;t.</span>
           </h1>
-          <p className="features-page-hero-sub">No account. No friction. No cleanup. Just a page name.</p>
+          <p className="features-page-hero-sub">Instant sharing with the controls that actually matter.</p>
         </section>
 
         <section className="features-page-spotlight" aria-labelledby="features-device-heading">

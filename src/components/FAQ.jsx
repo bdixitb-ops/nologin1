@@ -181,7 +181,7 @@ export default function FAQ() {
       <ToastContainer />
       <div className="about-page-inner">
         <section className="about-page-hero">
-          <p className="about-page-kicker">• FAQ</p>
+          <p className="about-page-kicker">FAQ</p>
           <h1 className="about-page-title">
             <span className="about-page-title-row about-page-title-strong">Confused is a perfectly</span>
             <span className="about-page-title-row about-page-title-strong">valid reaction.</span>

@@ -1,5 +1,14 @@
 "use client";
 
+import {
+  deleteExpiredDocument,
+  deleteFileFromStorage,
+  EXPIRATION_OPTIONS,
+  expirationTimestampForLabel,
+  isDocumentExpired,
+  labelFromExpirationTimestamp,
+} from "@/lib/documentExpiry";
+import { downloadStorageFile } from "@/lib/downloadFile";
 import { firestore, storage } from "@/lib/firebase";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import FileUploadIcon from "@mui/icons-material/FileUpload";
@@ -11,51 +20,12 @@ import NotesIcon from "@mui/icons-material/Notes";
 import InsertDriveFileOutlinedIcon from "@mui/icons-material/InsertDriveFileOutlined";
 import { TextField } from "@mui/material";
 import bcrypt from "bcryptjs";
-import { deleteDoc, doc, getDoc, setDoc } from "firebase/firestore";
-import { deleteObject, getDownloadURL, ref, uploadBytes } from "firebase/storage";
+import { doc, getDoc, setDoc } from "firebase/firestore";
+import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast, ToastContainer } from "react-toastify";
-
-const EXPIRATION_OPTIONS = ["1 hr", "3 hrs", "5 hrs", "10 hrs", "24 hrs", "48 hrs", "2 days", "4 days", "7 days"];
-
-const EXPIRATION_MS = {
-  "1 hr": 1 * 60 * 60 * 1000,
-  "3 hrs": 3 * 60 * 60 * 1000,
-  "5 hrs": 5 * 60 * 60 * 1000,
-  "10 hrs": 10 * 60 * 60 * 1000,
-  "24 hrs": 24 * 60 * 60 * 1000,
-  "48 hrs": 48 * 60 * 60 * 1000,
-  "2 days": 2 * 24 * 60 * 60 * 1000,
-  "4 days": 4 * 24 * 60 * 60 * 1000,
-  "7 days": 7 * 24 * 60 * 60 * 1000,
-};
-
-function expirationTimestampForLabel(label) {
-  return Date.now() + (EXPIRATION_MS[label] ?? EXPIRATION_MS["48 hrs"]);
-}
-
-function labelFromExpirationTimestamp(timestamp) {
-  if (!timestamp) {
-    return "48 hrs";
-  }
-  const remaining = timestamp - Date.now();
-  if (remaining <= 0) {
-    return "48 hrs";
-  }
-
-  let bestLabel = "48 hrs";
-  let bestDiff = Infinity;
-  for (const [label, ms] of Object.entries(EXPIRATION_MS)) {
-    const diff = Math.abs(remaining - ms);
-    if (diff < bestDiff) {
-      bestDiff = diff;
-      bestLabel = label;
-    }
-  }
-  return bestLabel;
-}
 
 export default function TextEditor({ domainName }) {
   const [text, setText] = useState("");
@@ -65,6 +35,7 @@ export default function TextEditor({ domainName }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [fileToDelete, setFileToDelete] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [downloadingFileName, setDownloadingFileName] = useState(null);
   const [isLocked, setIsLocked] = useState(false);
   const [lockPassword, setLockPassword] = useState("");
   const [lockPasswordInput, setLockPasswordInput] = useState("");
@@ -72,74 +43,51 @@ export default function TextEditor({ domainName }) {
   const [isLockModalOpen, setIsLockModalOpen] = useState(false);
   const [isUnlockModalOpen, setIsUnlockModalOpen] = useState(false);
   const [isUnlockPrompt, setIsUnlockPrompt] = useState(false);
-  const [passwordPanelOpen, setPasswordPanelOpen] = useState(false);
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
   const [pagePasswordInput, setPagePasswordInput] = useState("");
-  const [pagePasswordVisible, setPagePasswordVisible] = useState(false);
   const [expirationTime, setExpirationTime] = useState("48 hrs");
-  const [timePanelOpen, setTimePanelOpen] = useState(false);
+  const [isTimeModalOpen, setIsTimeModalOpen] = useState(false);
+  const [timeDraft, setTimeDraft] = useState("48 hrs");
   const [activeTab, setActiveTab] = useState("text");
+  const [isDocumentLoading, setIsDocumentLoading] = useState(true);
   const fileInputRef = useRef();
-  const pagePasswordInputRef = useRef(null);
-  const timeSelectRef = useRef(null);
+  const lastLockedToastAtRef = useRef(0);
+  const documentLoadedRef = useRef(false);
   const router = useRouter();
 
-  const deleteFileFromStorage = useCallback(async (domain, file) => {
-    const fileName = file?.name || file?.fileName;
-    const candidates = [];
-    if (file?.url) candidates.push(() => ref(storage, file.url));
-    if (fileName) candidates.push(() => ref(storage, `files/${domain}/${fileName}`));
-
-    let lastError = null;
-    for (const buildRef of candidates) {
-      try {
-        await deleteObject(buildRef());
-        return;
-      } catch (error) {
-        if (error?.code === "storage/object-not-found") return;
-        lastError = error;
-      }
-    }
-
-    if (lastError) throw lastError;
+  const resetEditorAfterExpiry = useCallback(() => {
+    documentLoadedRef.current = false;
+    setText("");
+    setFiles([]);
+    setIsProtected(false);
+    setIsLocked(false);
+    setIsAuthenticated(false);
+    setSessionEditable(false);
   }, []);
 
   const checkAndHandleExpiration = useCallback(async () => {
     try {
-      const docRef = doc(firestore, "documents", domainName);
-      const docSnap = await getDoc(docRef);
-
-      if (docSnap.exists()) {
-        const data = docSnap.data();
-        const currentTime = Date.now();
-        const expirationTimestamp = data.expirationTimestamp;
-
-        if (expirationTimestamp && expirationTimestamp <= currentTime) {
-          const allFiles = data.files || [];
-          for (const file of allFiles) {
-            try {
-              await deleteFileFromStorage(domainName, file);
-            } catch {
-              // Keep cleanup best effort.
-            }
-          }
-
-          await deleteDoc(docRef);
-          toast.warn("This domain has expired and has been automatically deleted.");
-          setText("");
-          setFiles([]);
-          setIsProtected(false);
-          setIsLocked(false);
-          setTimeout(() => router.push("/"), 2000);
-          return true;
-        }
+      const deleted = await deleteExpiredDocument(storage, firestore, domainName);
+      if (!deleted) {
+        return false;
       }
-      return false;
+
+      resetEditorAfterExpiry();
+      toast.warn("This domain has expired and has been automatically deleted.");
+      setTimeout(() => router.push("/"), 2000);
+      return true;
     } catch {
       return false;
     }
-  }, [deleteFileFromStorage, domainName, router]);
+  }, [domainName, resetEditorAfterExpiry, router]);
 
   useEffect(() => {
+    setIsDocumentLoading(true);
+    setIsAuthenticated(false);
+    setText("");
+    setFiles([]);
+    setIsProtected(false);
+
     const fetchData = async () => {
       try {
         const docRef = doc(firestore, "documents", domainName);
@@ -147,41 +95,56 @@ export default function TextEditor({ domainName }) {
 
         if (docSnap.exists()) {
           const data = docSnap.data();
-          const expired = await checkAndHandleExpiration();
-          if (expired) return;
-          setIsProtected(data.passwordSet);
-          setIsLocked(data.isLocked || false);
-          setLockPassword(data.lockPassword || "");
-          setFiles(data.files || []);
+          if (isDocumentExpired(data)) {
+            const expired = await checkAndHandleExpiration();
+            if (expired) return;
+          }
+          documentLoadedRef.current = true;
+          setIsProtected(!!data.passwordSet);
           setExpirationTime(labelFromExpirationTimestamp(data.expirationTimestamp));
-          if (!data.passwordSet) setText(data.text || "");
+          if (!data.passwordSet) {
+            setIsLocked(data.isLocked || false);
+            setLockPassword(data.lockPassword || "");
+            setFiles(data.files || []);
+            setText(data.text || "");
+          }
+        } else {
+          documentLoadedRef.current = false;
         }
       } catch {
         // Ignore noisy transient failures.
+      } finally {
+        setIsDocumentLoading(false);
       }
     };
 
     fetchData();
-    const expirationCheckInterval = setInterval(() => checkAndHandleExpiration(), 30000);
+    checkAndHandleExpiration();
+
+    const expirationCheckInterval = setInterval(() => {
+      checkAndHandleExpiration();
+    }, 60_000);
+
     return () => clearInterval(expirationCheckInterval);
   }, [domainName, checkAndHandleExpiration]);
-
-  useEffect(() => {
-    if (passwordPanelOpen) {
-      pagePasswordInputRef.current?.focus();
-    }
-  }, [passwordPanelOpen]);
-
-  useEffect(() => {
-    if (timePanelOpen) {
-      timeSelectRef.current?.focus();
-    }
-  }, [timePanelOpen]);
 
   const persistDocument = async (patch = {}) => {
     const docRef = doc(firestore, "documents", domainName);
     const docSnap = await getDoc(docRef);
-    const existingData = docSnap.exists() ? docSnap.data() : {};
+
+    if (!docSnap.exists()) {
+      if (documentLoadedRef.current) {
+        throw new Error("DOCUMENT_EXPIRED");
+      }
+      throw new Error("DOCUMENT_NOT_FOUND");
+    }
+
+    const existingData = docSnap.data();
+    if (isDocumentExpired(existingData)) {
+      await checkAndHandleExpiration();
+      throw new Error("DOCUMENT_EXPIRED");
+    }
+
     const filesWithTimestamps = files.map((file) =>
       file.uploadedAt ? file : { ...file, uploadedAt: Date.now() },
     );
@@ -191,8 +154,7 @@ export default function TextEditor({ domainName }) {
       text,
       files: filesWithTimestamps,
       createdAt: existingData.createdAt || Date.now(),
-      expirationTimestamp:
-        existingData.expirationTimestamp ?? expirationTimestampForLabel(expirationTime),
+      expirationTimestamp: existingData.expirationTimestamp ?? expirationTimestampForLabel(expirationTime),
       ...patch,
     });
   };
@@ -209,6 +171,10 @@ export default function TextEditor({ domainName }) {
           : inputPassword === storedPassword;
         if (isPasswordCorrect) {
           setText(data.text || "");
+          setFiles(data.files || []);
+          setIsLocked(data.isLocked || false);
+          setLockPassword(data.lockPassword || "");
+          setExpirationTime(labelFromExpirationTimestamp(data.expirationTimestamp));
           setIsAuthenticated(true);
           toast.success("Password verified!");
         } else {
@@ -220,6 +186,18 @@ export default function TextEditor({ domainName }) {
     }
   };
 
+  const handlePersistError = (error, fallbackMessage) => {
+    if (error?.message === "DOCUMENT_EXPIRED") {
+      toast.warn("This page has expired and was deleted.");
+      return;
+    }
+    if (error?.message === "DOCUMENT_NOT_FOUND") {
+      toast.error("This page no longer exists. Create it again from the home page.");
+      return;
+    }
+    toast.error(fallbackMessage);
+  };
+
   const handleSave = async () => {
     try {
       if (isLocked && !sessionEditable) {
@@ -228,25 +206,26 @@ export default function TextEditor({ domainName }) {
       }
       await persistDocument();
       toast.success("Document successfully saved!");
-    } catch {
-      toast.error("Error saving document.");
+    } catch (error) {
+      handlePersistError(error, "Error saving document.");
     }
   };
 
-  const handleExpirationChange = async (label) => {
+  const handleApplyExpiration = async () => {
+    const label = timeDraft;
+    setIsTimeModalOpen(false);
     setExpirationTime(label);
-    setTimePanelOpen(false);
     try {
       await persistDocument({ expirationTimestamp: expirationTimestampForLabel(label) });
       toast.success(`Page will expire in ${label}.`);
-    } catch {
-      toast.error("Error updating expiry time.");
+    } catch (error) {
+      handlePersistError(error, "Error updating expiry time.");
     }
   };
 
   const handleApplyPagePassword = async () => {
     if (!pagePasswordInput.trim()) {
-      toast.error("Enter a password or tap ✕ to cancel.");
+      toast.error("Enter a password to continue.");
       return;
     }
     try {
@@ -254,11 +233,10 @@ export default function TextEditor({ domainName }) {
       await persistDocument({ passwordSet: true, password: hashedPassword });
       setIsProtected(true);
       setPagePasswordInput("");
-      setPasswordPanelOpen(false);
-      setPagePasswordVisible(false);
+      setIsPasswordModalOpen(false);
       toast.success("Password protection enabled.");
-    } catch {
-      toast.error("Error setting password.");
+    } catch (error) {
+      handlePersistError(error, "Error setting password.");
     }
   };
 
@@ -267,11 +245,10 @@ export default function TextEditor({ domainName }) {
       await persistDocument({ passwordSet: false, password: "" });
       setIsProtected(false);
       setPagePasswordInput("");
-      setPasswordPanelOpen(false);
-      setPagePasswordVisible(false);
+      setIsPasswordModalOpen(false);
       toast.success("Password protection removed.");
-    } catch {
-      toast.error("Error removing password.");
+    } catch (error) {
+      handlePersistError(error, "Error removing password.");
     }
   };
 
@@ -290,8 +267,8 @@ export default function TextEditor({ domainName }) {
         setLockPasswordInput("");
         setIsLockModalOpen(false);
         toast.success("Domain locked and saved successfully!");
-      } catch {
-        toast.error("Error enabling edit lock.");
+      } catch (error) {
+        handlePersistError(error, "Error enabling edit lock.");
       }
       return;
     }
@@ -339,8 +316,21 @@ export default function TextEditor({ domainName }) {
     try {
       await persistDocument({ isLocked: false, lockPassword: "" });
       toast.success("Edit lock removed. Page is editable again.");
-    } catch {
-      toast.error("Error removing edit lock.");
+    } catch (error) {
+      handlePersistError(error, "Error removing edit lock.");
+    }
+  };
+
+  const notifyLockedForEdit = () => {
+    const now = Date.now();
+    if (now - lastLockedToastAtRef.current < 2000) return;
+    lastLockedToastAtRef.current = now;
+    toast.error("This page is locked. Unlock via Edit Lock to edit.");
+  };
+
+  const handleModalBackdropClick = (event, onClose) => {
+    if (event.target === event.currentTarget) {
+      onClose();
     }
   };
 
@@ -351,7 +341,7 @@ export default function TextEditor({ domainName }) {
     const maxFileSizeBytes = 200 * 1024 * 1024;
 
     if (isLocked && !sessionEditable) {
-      toast.error("This domain is locked. Unlock the upload files");
+      notifyLockedForEdit();
       return;
     }
     if (file.size > maxFileSizeBytes) {
@@ -368,10 +358,13 @@ export default function TextEditor({ domainName }) {
       const fileRef = ref(storage, `files/${domainName}/${file.name}`);
       await uploadBytes(fileRef, file);
       const url = await getDownloadURL(fileRef);
-      setFiles([...files, { name: file.name, url, uploadedAt: Date.now() }]);
+      const uploadedFile = { name: file.name, url, uploadedAt: Date.now() };
+      const updatedFiles = [...files, uploadedFile];
+      setFiles(updatedFiles);
+      await persistDocument({ files: updatedFiles });
       toast.success("File uploaded successfully!");
-    } catch {
-      toast.error("Error uploading file.");
+    } catch (error) {
+      handlePersistError(error, "Error uploading file.");
     } finally {
       setIsUploading(false);
     }
@@ -379,61 +372,86 @@ export default function TextEditor({ domainName }) {
 
   const handleDeleteFile = async (file) => {
     try {
-      await deleteFileFromStorage(domainName, file);
+      await deleteFileFromStorage(storage, domainName, file);
       const updatedFiles = files.filter((f) => f.name !== file.name);
       setFiles(updatedFiles);
-
-      const docRef = doc(firestore, "documents", domainName);
-      const existingData = (await getDoc(docRef)).data();
-      await setDoc(docRef, { ...existingData, files: updatedFiles });
+      await persistDocument({ files: updatedFiles });
       toast.success("File deleted successfully!");
-    } catch {
-      toast.error("Error deleting file.");
+    } catch (error) {
+      handlePersistError(error, "Error deleting file.");
     } finally {
       setFileToDelete(null);
     }
+  };
+
+  const handleDownloadFile = (file) => {
+    if (downloadingFileName) return;
+
+    setDownloadingFileName(file.name);
+    try {
+      downloadStorageFile(domainName, file.name, () => {
+        toast.error("Could not download file. Please try again.");
+        setDownloadingFileName(null);
+      });
+    } catch (error) {
+      console.error("Download failed:", error);
+      toast.error("Could not download file. Please try again.");
+      setDownloadingFileName(null);
+      return;
+    }
+
+    window.setTimeout(() => setDownloadingFileName(null), 2500);
   };
 
   const handleText = (value) => {
     if (!isLocked || sessionEditable) {
       setText(value);
     } else {
-      toast.error("This domain is locked. Unlock the domain to edit.");
+      notifyLockedForEdit();
     }
   };
 
   const canEditContent = !isLocked || sessionEditable;
+  const showPasswordGate = isDocumentLoading || (!isAuthenticated && isProtected);
+  const showEditor = !isDocumentLoading && (isAuthenticated || !isProtected);
 
   return (
     <div className="editor-container">
       <ToastContainer />
-      {!isAuthenticated && isProtected ? (
-        <div className="password-protected-container">
+      {showPasswordGate ? (
+        <div className="editor-password-gate">
           <Link href="/" className="editor-home-btn editor-home-btn--protected">
             <HomeOutlinedIcon className="editor-home-btn-icon" aria-hidden />
             Home
           </Link>
-          <div className="password-card">
-            <h2 className="password-title">🔒 Secure Document</h2>
-            <p className="password-description">
-              This document is password-protected. Please enter your password to unlock access.
-            </p>
-            <div className="password-input-container">
-              <input
-                type="password"
-                value={inputPassword}
-                onChange={(e) => setInputPassword(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handlePasswordSubmit()}
-                placeholder="Enter Password"
-                className="password-input-field"
-              />
-              <button onClick={handlePasswordSubmit} className="unlock-button">
-                Unlock
-              </button>
-            </div>
+          <div className="modal-overlay editor-password-gate-overlay">
+            {!isDocumentLoading && isProtected && !isAuthenticated ? (
+              <div className="modal-box">
+                <h4>Password Protected</h4>
+                <p>This page is password protected. Enter the password to view it.</p>
+                <TextField
+                  type="password"
+                  label="Enter Password"
+                  fullWidth
+                  value={inputPassword}
+                  onChange={(e) => setInputPassword(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      handlePasswordSubmit();
+                    }
+                  }}
+                />
+                <div className="modal-actions">
+                  <button onClick={handlePasswordSubmit} className="confirm-button confirm-button--primary" type="button">
+                    Unlock
+                  </button>
+                </div>
+              </div>
+            ) : null}
           </div>
         </div>
-      ) : (
+      ) : null}
+      {showEditor ? (
         <div className="entire-screen">
           <div className="everything-except-save">
             <div className="editor-page-top">
@@ -477,8 +495,12 @@ export default function TextEditor({ domainName }) {
                       }
                       onChange={(e) => handleText(e.target.value)}
                       onKeyDown={(e) => {
-                        if (!canEditContent && e.key !== "Tab" && !e.ctrlKey && !e.metaKey) {
-                          e.preventDefault();
+                        if (!canEditContent) {
+                          const isAllowed = e.key === "Tab" || e.ctrlKey || e.metaKey;
+                          if (!isAllowed) {
+                            e.preventDefault();
+                            notifyLockedForEdit();
+                          }
                         }
                       }}
                       readOnly={!canEditContent}
@@ -504,34 +526,29 @@ export default function TextEditor({ domainName }) {
                             <div key={index} className="file-item">
                               <div className="file-icon">📄</div>
                               <div className="file-details">
-                                <a href={file.url} target="_blank" rel="noopener noreferrer" className="file-name">
-                                  {file.name}
-                                </a>
+                                <span className="file-name">{file.name}</span>
                                 <div className="file-actions">
                                   <button
                                     type="button"
                                     className="download-button"
-                                    onClick={(e) => {
-                                      e.preventDefault();
-                                      const link = document.createElement("a");
-                                      link.href = file.url;
-                                      link.download = file.name;
-                                      document.body.appendChild(link);
-                                      link.click();
-                                      document.body.removeChild(link);
+                                    disabled={downloadingFileName === file.name}
+                                    onClick={() => handleDownloadFile(file)}
+                                  >
+                                    {downloadingFileName === file.name ? "Downloading..." : "Download"}
+                                  </button>
+                                  <button
+                                    type="button"
+                                    className="delete-button"
+                                    onClick={() => {
+                                      if (!canEditContent) {
+                                        notifyLockedForEdit();
+                                        return;
+                                      }
+                                      setFileToDelete(file);
                                     }}
                                   >
-                                    Download
+                                    Delete
                                   </button>
-                                  {canEditContent ? (
-                                    <button
-                                      type="button"
-                                      className="delete-button"
-                                      onClick={() => setFileToDelete(file)}
-                                    >
-                                      Delete
-                                    </button>
-                                  ) : null}
                                 </div>
                               </div>
                             </div>
@@ -539,16 +556,20 @@ export default function TextEditor({ domainName }) {
                         </div>
                       ) : null}
 
-                      {canEditContent ? (
-                        <button
-                          type="button"
-                          onClick={() => fileInputRef.current?.click()}
-                          className="upload-button"
-                        >
-                          <FileUploadIcon />
-                          {isUploading ? "Uploading..." : "Upload File"}
-                        </button>
-                      ) : null}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (!canEditContent) {
+                            notifyLockedForEdit();
+                            return;
+                          }
+                          fileInputRef.current?.click();
+                        }}
+                        className="upload-button"
+                      >
+                        <FileUploadIcon />
+                        {isUploading ? "Uploading..." : "Upload File"}
+                      </button>
                     </div>
 
                     <div className="editor-files-social">
@@ -575,159 +596,54 @@ export default function TextEditor({ domainName }) {
                     {isLocked ? (sessionEditable ? "Unlock" : "Edit") : "Edit Lock"}
                   </button>
 
-                <div
-                  className={`home-v2-control home-v2-time-control editor-page-time-control editor-toolbar-control ${timePanelOpen ? "home-v2-time-control--open" : ""}`}
-                  role="group"
-                  aria-label="Page expiry time"
-                  aria-expanded={timePanelOpen}
-                >
-                  {!timePanelOpen ? (
-                    <button
-                      type="button"
-                      className="home-v2-time-collapsed editor-option-button"
-                      onClick={() => {
-                        setTimePanelOpen(true);
-                        setPasswordPanelOpen(false);
-                      }}
-                    >
-                      <span className="home-v2-time-collapsed-main">Set time</span>
-                      <span className="home-v2-time-collapsed-optional">{expirationTime}</span>
-                    </button>
-                  ) : (
-                    <select
-                      ref={timeSelectRef}
-                      className="home-v2-time-select"
-                      value={expirationTime}
-                      aria-label="Choose how long the page stays online"
-                      onChange={(e) => handleExpirationChange(e.target.value)}
-                      onBlur={() => {
-                        window.setTimeout(() => setTimePanelOpen(false), 180);
-                      }}
-                    >
-                      {EXPIRATION_OPTIONS.map((option) => (
-                        <option key={option} value={option}>
-                          {option}
-                        </option>
-                      ))}
-                    </select>
-                  )}
-                </div>
+                  <button
+                    type="button"
+                    className="editor-toolbar-btn editor-set-time-btn"
+                    onClick={() => {
+                      setTimeDraft(expirationTime);
+                      setIsTimeModalOpen(true);
+                      setIsPasswordModalOpen(false);
+                    }}
+                  >
+                    <span className="editor-set-time-label">Set time</span>
+                    <span className="editor-set-time-value">{expirationTime}</span>
+                  </button>
 
-                <div
-                  className={`home-v2-control home-v2-password-control editor-page-password-control editor-toolbar-control ${passwordPanelOpen ? "home-v2-password-control--open" : ""}`}
-                >
-                  {!passwordPanelOpen ? (
-                    <button
-                      type="button"
-                      className="home-v2-password-collapsed editor-option-button"
-                      onClick={() => {
-                        setPasswordPanelOpen(true);
-                        setTimePanelOpen(false);
-                      }}
-                    >
-                      {isProtected ? "Password on" : "Set Password"}
-                    </button>
-                  ) : (
-                    <div className="home-v2-password-editor">
-                      <div className="home-v2-password-input-wrap">
-                        <input
-                          ref={pagePasswordInputRef}
-                          type={pagePasswordVisible ? "text" : "password"}
-                          value={pagePasswordInput}
-                          onChange={(e) => setPagePasswordInput(e.target.value)}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter") {
-                              handleApplyPagePassword();
-                            }
-                          }}
-                          placeholder={isProtected ? "New password" : "Enter password"}
-                          className="home-v2-password-input"
-                          autoComplete="new-password"
-                        />
-                        <button
-                          type="button"
-                          className="home-v2-password-visibility-btn"
-                          onClick={() => setPagePasswordVisible((v) => !v)}
-                          aria-label={pagePasswordVisible ? "Hide password" : "Show password"}
-                        >
-                          {pagePasswordVisible ? (
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden>
-                              <path
-                                d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              />
-                              <line x1="1" y1="1" x2="23" y2="23" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                            </svg>
-                          ) : (
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden>
-                              <path
-                                d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              />
-                              <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="2" />
-                            </svg>
-                          )}
-                        </button>
-                      </div>
-                      <div className="home-v2-password-close-slot">
-                        <button
-                          type="button"
-                          className="home-v2-password-close"
-                          onClick={() => {
-                            setPasswordPanelOpen(false);
-                            setPagePasswordInput("");
-                            setPagePasswordVisible(false);
-                          }}
-                          aria-label="Close password panel"
-                        >
-                          ×
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </div>
+                  <button
+                    type="button"
+                    className={`editor-toolbar-btn editor-set-password-btn ${isProtected ? "is-active" : ""}`}
+                    onClick={() => {
+                      setPagePasswordInput("");
+                      setIsPasswordModalOpen(true);
+                      setIsTimeModalOpen(false);
+                    }}
+                  >
+                    <span className="editor-set-time-label">Set Password</span>
+                    {isProtected ? <span className="editor-set-time-value">On</span> : null}
+                  </button>
 
                 <button
                   onClick={handleSave}
-                  className="editor-toolbar-btn editor-toolbar-btn--save"
+                  className={`editor-toolbar-btn editor-toolbar-btn--save${canEditContent ? "" : " is-locked"}`}
                   type="button"
-                  disabled={!canEditContent}
                   aria-disabled={!canEditContent}
                 >
                   Save
                 </button>
               </div>
 
-              {passwordPanelOpen ? (
-                <div className="editor-password-actions">
-                  {isProtected ? (
-                    <button type="button" className="editor-toolbar-btn" onClick={handleRemovePagePassword}>
-                      Remove
-                    </button>
-                  ) : null}
-                  <button type="button" className="editor-toolbar-btn editor-toolbar-btn--save" onClick={handleApplyPagePassword}>
-                    Apply
-                  </button>
-                </div>
-              ) : null}
               </div>
             </div>
           </div>
 
           {fileToDelete && (
-            <div className="modal-overlay">
+            <div className="modal-overlay" onClick={(e) => handleModalBackdropClick(e, () => setFileToDelete(null))}>
               <div className="modal-box">
                 <p>
                   Are you sure you want to delete <strong>{fileToDelete.name}</strong>? This action cannot be undone.
                 </p>
                 <div className="modal-actions">
-                  <button onClick={() => handleDeleteFile(fileToDelete)} className="confirm-button">
+                  <button onClick={() => handleDeleteFile(fileToDelete)} className="confirm-button confirm-button--danger" type="button">
                     Yes, Delete
                   </button>
                   <button onClick={() => setFileToDelete(null)} className="cancel-button">
@@ -738,8 +654,93 @@ export default function TextEditor({ domainName }) {
             </div>
           )}
 
+          {isPasswordModalOpen && (
+            <div
+              className="modal-overlay"
+              onClick={(e) =>
+                handleModalBackdropClick(e, () => {
+                  setIsPasswordModalOpen(false);
+                  setPagePasswordInput("");
+                })
+              }
+            >
+              <div className="modal-box">
+                <h4>{isProtected ? "Update Page Password" : "Set Page Password"}</h4>
+                <TextField
+                  type="password"
+                  label={isProtected ? "New password" : "Enter password"}
+                  fullWidth
+                  value={pagePasswordInput}
+                  onChange={(e) => setPagePasswordInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      handleApplyPagePassword();
+                    }
+                  }}
+                  autoComplete="new-password"
+                />
+                <div className="modal-actions">
+                  <button onClick={handleApplyPagePassword} className="confirm-button confirm-button--primary" type="button">
+                    Apply
+                  </button>
+                  {isProtected ? (
+                    <button onClick={handleRemovePagePassword} className="confirm-button confirm-button--danger" type="button">
+                      Remove
+                    </button>
+                  ) : null}
+                  <button
+                    onClick={() => {
+                      setIsPasswordModalOpen(false);
+                      setPagePasswordInput("");
+                    }}
+                    className="cancel-button"
+                    type="button"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {isTimeModalOpen && (
+            <div className="modal-overlay" onClick={(e) => handleModalBackdropClick(e, () => setIsTimeModalOpen(false))}>
+              <div className="modal-box">
+                <h4>Set Page Expiry</h4>
+                <select
+                  className="editor-modal-time-select"
+                  value={timeDraft}
+                  aria-label="Choose how long the page stays online"
+                  onChange={(e) => setTimeDraft(e.target.value)}
+                >
+                  {EXPIRATION_OPTIONS.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </select>
+                <div className="modal-actions">
+                  <button onClick={handleApplyExpiration} className="confirm-button confirm-button--primary" type="button">
+                    Apply
+                  </button>
+                  <button onClick={() => setIsTimeModalOpen(false)} className="cancel-button" type="button">
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
           {isLockModalOpen && (
-            <div className="modal-overlay">
+            <div
+              className="modal-overlay"
+              onClick={(e) =>
+                handleModalBackdropClick(e, () => {
+                  setIsLockModalOpen(false);
+                  setLockPasswordInput("");
+                })
+              }
+            >
               <div className="modal-box">
                 <h4>Set Password for Lock</h4>
                 <TextField
@@ -755,7 +756,7 @@ export default function TextEditor({ domainName }) {
                   }}
                 />
                 <div className="modal-actions">
-                  <button onClick={handleLock} className="confirm-button" type="button">
+                  <button onClick={handleLock} className="confirm-button confirm-button--primary" type="button">
                     Lock
                   </button>
                   <button
@@ -774,11 +775,11 @@ export default function TextEditor({ domainName }) {
           )}
 
           {isUnlockPrompt && (
-            <div className="modal-overlay">
+            <div className="modal-overlay" onClick={(e) => handleModalBackdropClick(e, () => setIsUnlockPrompt(false))}>
               <div className="modal-box">
                 <p>Are you sure you want to make the domain editable to the public?</p>
                 <div className="modal-actions">
-                  <button onClick={handleUnlock} className="confirm-button">
+                  <button onClick={handleUnlock} className="confirm-button confirm-button--primary" type="button">
                     Yes, Unlock
                   </button>
                   <button onClick={() => setIsUnlockPrompt(false)} className="cancel-button">
@@ -790,7 +791,15 @@ export default function TextEditor({ domainName }) {
           )}
 
           {isUnlockModalOpen && (
-            <div className="modal-overlay">
+            <div
+              className="modal-overlay"
+              onClick={(e) =>
+                handleModalBackdropClick(e, () => {
+                  setIsUnlockModalOpen(false);
+                  setLockPasswordInput("");
+                })
+              }
+            >
               <div className="modal-box">
                 <h4>Enter Password to Unlock</h4>
                 <TextField
@@ -806,7 +815,7 @@ export default function TextEditor({ domainName }) {
                   }}
                 />
                 <div className="modal-actions">
-                  <button onClick={handleUnlockWithPassword} className="confirm-button-green" type="button">
+                  <button onClick={handleUnlockWithPassword} className="confirm-button confirm-button--primary" type="button">
                     Unlock
                   </button>
                   <button
@@ -824,7 +833,7 @@ export default function TextEditor({ domainName }) {
             </div>
           )}
         </div>
-      )}
+      ) : null}
     </div>
   );
 }

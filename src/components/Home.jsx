@@ -1,8 +1,12 @@
 "use client";
 
+import {
+  cleanupAllExpiredDocuments,
+  deleteExpiredDocument,
+  isDocumentExpired,
+} from "@/lib/documentExpiry";
 import { firestore, storage } from "@/lib/firebase";
-import { collection, deleteDoc, doc, getDoc, getDocs, query, setDoc, where } from "firebase/firestore";
-import { deleteObject, ref } from "firebase/storage";
+import { doc, getDoc, setDoc } from "firebase/firestore";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -136,36 +140,6 @@ export default function Home() {
     return timestamp + expirationMs;
   };
 
-  const deleteFileFromStorage = useCallback(async (domain, file) => {
-    const fileName = file?.name || file?.fileName;
-    const candidates = [];
-
-    if (file?.url) {
-      candidates.push(() => ref(storage, file.url));
-    }
-
-    if (fileName) {
-      candidates.push(() => ref(storage, `files/${domain}/${fileName}`));
-    }
-
-    let lastError = null;
-    for (const buildRef of candidates) {
-      try {
-        await deleteObject(buildRef());
-        return;
-      } catch (error) {
-        if (error?.code === "storage/object-not-found") {
-          return;
-        }
-        lastError = error;
-      }
-    }
-
-    if (lastError) {
-      throw lastError;
-    }
-  }, []);
-
   const handleSubmit = async () => {
     if (!domainName.trim()) {
       toast.error("Enter a page name.");
@@ -185,18 +159,9 @@ export default function Home() {
 
       if (docSnap.exists()) {
         const data = docSnap.data();
-        const expirationTimestamp = data.expirationTimestamp;
 
-        if (expirationTimestamp && expirationTimestamp <= currentTime) {
-          const files = data.files || [];
-          for (const file of files) {
-            try {
-              await deleteFileFromStorage(domainName, file);
-            } catch {
-              // Keep cleanup best effort.
-            }
-          }
-          await deleteDoc(docRef);
+        if (isDocumentExpired(data, currentTime)) {
+          await deleteExpiredDocument(storage, firestore, domainName);
           toast.warn("This domain has expired and has been automatically deleted. Creating new domain...");
           domainWasDeleted = true;
           const verifyDelete = await getDoc(docRef);
@@ -243,29 +208,11 @@ export default function Home() {
 
   const cleanupExpiredDomains = useCallback(async () => {
     try {
-      const currentTime = Date.now();
-      const q = query(collection(firestore, "documents"), where("expirationTimestamp", "<=", currentTime));
-      const querySnapshot = await getDocs(q);
-
-      for (const docSnap of querySnapshot.docs) {
-        const currentDomain = docSnap.id;
-        const data = docSnap.data();
-        const files = data.files || [];
-
-        for (const file of files) {
-          try {
-            await deleteFileFromStorage(currentDomain, file);
-          } catch {
-            // Keep cleanup best effort.
-          }
-        }
-
-        await deleteDoc(doc(firestore, "documents", currentDomain));
-      }
+      await cleanupAllExpiredDocuments(storage, firestore);
     } catch {
       // Silent cleanup failures.
     }
-  }, [deleteFileFromStorage]);
+  }, []);
 
   useEffect(() => {
     cleanupExpiredDomains();

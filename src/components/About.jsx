@@ -55,7 +55,7 @@ export default function About() {
     <div className="about-page">
       <div className="about-page-inner">
         <section className="about-page-hero">
-          <p className="about-page-kicker">• OUR STORY</p>
+          <p className="about-page-kicker">OUR STORY</p>
           <h1 className="about-page-title">
             <span className="about-page-title-row about-page-title-strong">Short story,</span>
             <span className="about-page-title-row">
