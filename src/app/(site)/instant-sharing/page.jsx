@@ -1,4 +1,5 @@
 import InstantSharing from "@/components/InstantSharing";
+import { shareImageMetadata } from "@/lib/siteMetadata";
 
 export const metadata = {
   title: {
@@ -7,8 +8,9 @@ export const metadata = {
   description:
     "Share text, code and files instantly online — no login, no signup, no account needed. Create a page, drop your content, share the link. Done in seconds.",
   alternates: {
-    canonical: "https://www.nologin.in/instant-sharing",
+    canonical: "https://nologin.in/instant-sharing",
   },
+  ...shareImageMetadata,
 };
 
 export default function InstantSharingPage() {

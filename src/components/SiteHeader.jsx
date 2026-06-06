@@ -11,12 +11,11 @@ export default function SiteHeader() {
     <header className="home-v2-nav">
       <Link href="/" className="home-v2-brand" onClick={() => setMobileMenuOpen(false)}>
         <Image
-          src="/nologin-logo-icon.svg"
+          src="/logo.png"
           alt=""
           width={28}
           height={28}
           className="home-v2-brand-logo"
-          unoptimized
         />
         <span>NoLogin</span>
       </Link>

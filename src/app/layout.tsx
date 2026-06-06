@@ -1,4 +1,14 @@
+import SiteJsonLd from "@/components/SiteJsonLd";
 import "bootstrap/dist/css/bootstrap.min.css";
+import {
+  SITE_DESCRIPTION,
+  SITE_KEYWORDS,
+  SITE_NAME,
+  SITE_TAGLINE,
+  SITE_URL,
+  shareImageMetadata,
+  siteIconMetadata,
+} from "@/lib/siteMetadata";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "react-toastify/dist/ReactToastify.css";
@@ -15,39 +25,63 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const defaultTitle = `${SITE_NAME} | ${SITE_TAGLINE}`;
+
 export const metadata: Metadata = {
-  metadataBase: new URL("https://nologin.in"),
+  metadataBase: new URL(SITE_URL),
   title: {
-    default: "NoLogin | Instant File & Text Sharing Without Login",
-    template: "%s | NoLogin",
+    default: defaultTitle,
+    template: `%s | ${SITE_NAME}`,
   },
-  description:
-    "Tired of logging in? NoLogin offers fast, secure text and document sharing with no credentials required.",
-  keywords: [
-    "NoLogin",
-    "secure file sharing",
-    "anonymous sharing",
-    "instant text sharing",
-    "pastebin alternative",
-    "share across devices",
-  ],
+  description: SITE_DESCRIPTION,
+  keywords: SITE_KEYWORDS,
+  applicationName: SITE_NAME,
+  authors: [{ name: SITE_NAME, url: SITE_URL }],
+  creator: SITE_NAME,
+  publisher: SITE_NAME,
+  category: "technology",
+  formatDetection: {
+    telephone: false,
+    email: false,
+    address: false,
+  },
+  alternates: {
+    canonical: SITE_URL,
+  },
   openGraph: {
-    title: "NoLogin | Instant File & Text Sharing Without Login",
-    description:
-      "Fast, secure text and document sharing with no signup and no login.",
-    url: "https://nologin.in",
-    siteName: "NoLogin",
+    title: defaultTitle,
+    description: SITE_DESCRIPTION,
+    url: SITE_URL,
+    siteName: SITE_NAME,
+    locale: "en_US",
     type: "website",
+    ...shareImageMetadata.openGraph,
   },
   twitter: {
-    card: "summary_large_image",
-    title: "NoLogin | Instant File & Text Sharing Without Login",
-    description:
-      "Fast, secure text and document sharing with no signup and no login.",
+    ...shareImageMetadata.twitter,
+    title: defaultTitle,
+    description: SITE_DESCRIPTION,
   },
   robots: {
     index: true,
     follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+      "max-video-preview": -1,
+    },
+  },
+  icons: siteIconMetadata,
+  manifest: "/site.webmanifest",
+  appleWebApp: {
+    capable: true,
+    title: SITE_NAME,
+    statusBarStyle: "black-translucent",
+  },
+  other: {
+    "mobile-web-app-capable": "yes",
   },
 };
 
@@ -62,7 +96,10 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable}`}
       data-scroll-behavior="smooth"
     >
-      <body suppressHydrationWarning>{children}</body>
+      <body suppressHydrationWarning>
+        <SiteJsonLd />
+        {children}
+      </body>
     </html>
   );
 }

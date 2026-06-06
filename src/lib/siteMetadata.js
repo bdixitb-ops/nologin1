@@ -1,0 +1,109 @@
+export const SITE_URL = "https://nologin.in";
+export const SITE_NAME = "NoLogin";
+export const SITE_TAGLINE = "Instant File & Text Sharing Without Login";
+export const SITE_DESCRIPTION =
+  "Share text, code and files instantly at nologin.in/yourpagename — no login, no signup, no account. Password protection, edit lock, file uploads up to 100MB, and auto expiry. Free forever.";
+export const SITE_KEYWORDS = [
+  "NoLogin",
+  "nologin.in",
+  "share text online",
+  "share files online",
+  "share code online",
+  "instant file sharing",
+  "instant text sharing",
+  "no login file sharing",
+  "no signup sharing",
+  "anonymous file sharing",
+  "secure file sharing",
+  "pastebin alternative",
+  "hastebin alternative",
+  "dontpad alternative",
+  "online notepad",
+  "online clipboard",
+  "cross device sharing",
+  "share without account",
+  "temporary file sharing",
+  "free file upload",
+];
+
+/** Social / OG preview — 512px icon pack, not the full UI logo */
+export const SITE_OG_IMAGE_PATH = "/android-chrome-512x512.png";
+export const SITE_OG_IMAGE_URL = `${SITE_URL}${SITE_OG_IMAGE_PATH}`;
+
+export const siteOgImage = {
+  url: SITE_OG_IMAGE_PATH,
+  width: 512,
+  height: 512,
+  alt: SITE_NAME,
+};
+
+export const shareImageMetadata = {
+  openGraph: {
+    images: [siteOgImage],
+  },
+  twitter: {
+    card: "summary_large_image",
+    images: [SITE_OG_IMAGE_PATH],
+  },
+};
+
+export const siteIconMetadata = {
+  icon: [
+    { url: "/favicon.ico", sizes: "any" },
+    { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
+    { url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },
+  ],
+  apple: "/apple-touch-icon.png",
+};
+
+/** @param {string} path */
+export function siteUrl(path = "") {
+  if (!path || path === "/") return SITE_URL;
+  return `${SITE_URL}${path.startsWith("/") ? path : `/${path}`}`;
+}
+
+export const siteOrganizationJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  name: SITE_NAME,
+  url: SITE_URL,
+  logo: SITE_OG_IMAGE_URL,
+  email: "nologin044@gmail.com",
+  sameAs: ["https://www.instagram.com/nologin.in"],
+};
+
+export const siteWebSiteJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  name: SITE_NAME,
+  url: SITE_URL,
+  description: SITE_DESCRIPTION,
+  publisher: {
+    "@type": "Organization",
+    name: SITE_NAME,
+    url: SITE_URL,
+  },
+};
+
+export const siteWebApplicationJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  name: SITE_NAME,
+  url: SITE_URL,
+  description: SITE_DESCRIPTION,
+  applicationCategory: "UtilitiesApplication",
+  operatingSystem: "Any",
+  offers: {
+    "@type": "Offer",
+    price: "0",
+    priceCurrency: "USD",
+  },
+  featureList: [
+    "Instant text sharing without login",
+    "File uploads up to 100MB",
+    "Password protection",
+    "Edit lock",
+    "Auto expiry",
+    "Cross-device access via page name",
+  ],
+};

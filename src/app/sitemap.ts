@@ -1,48 +1,38 @@
+import { SITE_URL, siteUrl } from "@/lib/siteMetadata";
 import type { MetadataRoute } from "next";
 
+const STATIC_PATHS = [
+  "/",
+  "/about",
+  "/faq",
+  "/features-of-nologin",
+  "/why-nologin",
+  "/blog",
+  "/cross-device-sharing",
+  "/share-text-online",
+  "/instant-sharing",
+  "/upload-files-online",
+  "/notepad",
+  "/no-signup-sharing",
+  "/share-code-online",
+  "/fastest-online-sharing",
+  "/dontpad-alternative",
+  "/pastebin-alternative",
+  "/hastebin-alternative",
+  "/online-clipboard",
+  "/privacy-policy",
+  "/terms",
+  "/content-policy",
+  "/best-online-sharing",
+] as const;
+
 export default function sitemap(): MetadataRoute.Sitemap {
-  return [
-    {
-      url: "https://nologin.in",
-      lastModified: new Date(),
-      changeFrequency: "daily",
-      priority: 1,
-    },
-    {
-      url: "https://www.nologin.in/dontpad-alternative",
-      lastModified: new Date(),
-      changeFrequency: "monthly",
-      priority: 0.8,
-    },
-    {
-      url: "https://www.nologin.in/pastebin-alternative",
-      lastModified: new Date(),
-      changeFrequency: "monthly",
-      priority: 0.8,
-    },
-    {
-      url: "https://www.nologin.in/hastebin-alternative",
-      lastModified: new Date(),
-      changeFrequency: "monthly",
-      priority: 0.8,
-    },
-    {
-      url: "https://www.nologin.in/online-clipboard",
-      lastModified: new Date(),
-      changeFrequency: "monthly",
-      priority: 0.8,
-    },
-    {
-      url: "https://www.nologin.in/share-code-online",
-      lastModified: new Date(),
-      changeFrequency: "monthly",
-      priority: 0.8,
-    },
-    {
-      url: "https://www.nologin.in/why-nologin",
-      lastModified: new Date(),
-      changeFrequency: "monthly",
-      priority: 0.8,
-    },
-  ];
+  const lastModified = new Date();
+
+  return STATIC_PATHS.map((path) => ({
+    url: path === "/" ? SITE_URL : siteUrl(path),
+    lastModified,
+    changeFrequency: path === "/" ? "daily" : "monthly",
+    priority: path === "/" ? 1 : path === "/about" || path === "/faq" ? 0.9 : 0.8,
+  }));
 }

@@ -7,6 +7,12 @@ const nextConfig: NextConfig = {
   async redirects() {
     return [
       {
+        source: "/:path*",
+        has: [{ type: "host", value: "www.nologin.in" }],
+        destination: "https://nologin.in/:path*",
+        permanent: true,
+      },
+      {
         source: "/TermsAndConditions",
         destination: "/terms",
         permanent: true,

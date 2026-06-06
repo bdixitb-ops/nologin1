@@ -1,4 +1,5 @@
 import ShareTextOnline from "@/components/ShareTextOnline";
+import { shareImageMetadata } from "@/lib/siteMetadata";
 
 export const metadata = {
   title: {
@@ -7,8 +8,9 @@ export const metadata = {
   description:
     "Share text online instantly — no login, no signup, no account needed. Paste your text, pick a page name, share the link. Works on any device, free forever.",
   alternates: {
-    canonical: "https://www.nologin.in/share-text-online",
+    canonical: "https://nologin.in/share-text-online",
   },
+  ...shareImageMetadata,
 };
 
 export default function ShareTextOnlinePage() {

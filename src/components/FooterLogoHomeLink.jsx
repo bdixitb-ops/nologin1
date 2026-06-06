@@ -19,12 +19,11 @@ export default function FooterLogoHomeLink() {
       }}
     >
       <Image
-        src="/nologin-logo-icon.svg"
+        src="/logo.png"
         alt=""
         width={44}
         height={44}
         className="home-v2-footer-logo"
-        unoptimized
       />
     </a>
   );

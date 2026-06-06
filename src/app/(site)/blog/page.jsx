@@ -1,5 +1,6 @@
 import { Lora } from "next/font/google";
 import Blog from "@/components/Blog";
+import { shareImageMetadata } from "@/lib/siteMetadata";
 
 const blogHeading = Lora({
   subsets: ["latin"],
@@ -21,7 +22,9 @@ export const metadata = {
     description:
       "Updates and articles from the NoLogin team about sharing text and files online without logging in.",
     url: "https://nologin.in/blog",
+    ...shareImageMetadata.openGraph,
   },
+  twitter: shareImageMetadata.twitter,
 };
 
 export default function BlogPage() {
