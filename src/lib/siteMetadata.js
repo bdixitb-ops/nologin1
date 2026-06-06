@@ -1,5 +1,7 @@
 export const SITE_URL = "https://nologin.in";
 export const SITE_NAME = "NoLogin";
+/** Transparent vector logo for in-app UI (header, footer, navbar) */
+export const SITE_LOGO_SVG_PATH = "/nologin-logo-icon.svg";
 export const SITE_TAGLINE = "Instant File & Text Sharing Without Login";
 export const SITE_DESCRIPTION =
   "Share text, code and files instantly at nologin.in/yourpagename — no login, no signup, no account. Password protection, edit lock, file uploads up to 100MB, and auto expiry. Free forever.";

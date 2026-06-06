@@ -1,5 +1,6 @@
 "use client";
 
+import { SITE_LOGO_SVG_PATH } from "@/lib/siteMetadata";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
@@ -34,7 +35,14 @@ const Navbar = () => {
       {!isTextEditor && (
         <>
           <div className="navbar-left">
-            <Image className="logo" src="/logo.png" alt="Logo" width={50} height={43} />
+            <Image
+              className="logo"
+              src={SITE_LOGO_SVG_PATH}
+              alt="NoLogin"
+              width={44}
+              height={44}
+              unoptimized
+            />
             <div className="navbar-title">
               <span className="no">No</span>
               <span className="login">Login</span>
