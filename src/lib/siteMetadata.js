@@ -29,14 +29,16 @@ export const SITE_KEYWORDS = [
   "free file upload",
 ];
 
-/** Social / OG preview — 512px icon pack, not the full UI logo */
-export const SITE_OG_IMAGE_PATH = "/android-chrome-512x512.png";
+/** Social / OG preview — dark 1200x630 card (WhatsApp/Twitter ignore PNG transparency) */
+export const SITE_OG_IMAGE_PATH = "/og-image.png";
 export const SITE_OG_IMAGE_URL = `${SITE_URL}${SITE_OG_IMAGE_PATH}`;
+/** Square logo for JSON-LD / Google (social uses og-image.png above) */
+export const SITE_LOGO_PNG_URL = `${SITE_URL}/android-chrome-512x512.png`;
 
 export const siteOgImage = {
   url: SITE_OG_IMAGE_URL,
-  width: 512,
-  height: 512,
+  width: 1200,
+  height: 630,
   alt: SITE_NAME,
 };
 
@@ -70,7 +72,7 @@ export const siteOrganizationJsonLd = {
   "@type": "Organization",
   name: SITE_NAME,
   url: SITE_URL,
-  logo: SITE_OG_IMAGE_URL,
+  logo: SITE_LOGO_PNG_URL,
   email: "nologin044@gmail.com",
   sameAs: ["https://www.instagram.com/nologin.in"],
 };
