@@ -1,33 +1,28 @@
 "use client";
 
-import { GA_MEASUREMENT_ID } from "@/components/GoogleAnalytics";
+import { trackGaPageView } from "@/lib/analytics";
 import { usePathname, useSearchParams } from "next/navigation";
-import { useEffect } from "react";
-
-function trackPageView(pagePath) {
-  if (typeof window.gtag !== "function") return false;
-
-  window.gtag("config", GA_MEASUREMENT_ID, {
-    page_path: pagePath,
-  });
-  return true;
-}
+import { useEffect, useRef } from "react";
 
 export default function GoogleAnalyticsRouteTracker() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const lastTrackedPath = useRef(null);
 
   useEffect(() => {
     const query = searchParams?.toString();
     const pagePath = query ? `${pathname}?${query}` : pathname;
 
-    if (trackPageView(pagePath)) return;
+    if (lastTrackedPath.current === pagePath) return;
+    lastTrackedPath.current = pagePath;
+
+    if (trackGaPageView(pagePath)) return;
 
     const intervalId = window.setInterval(() => {
-      if (trackPageView(pagePath)) {
+      if (trackGaPageView(pagePath)) {
         window.clearInterval(intervalId);
       }
-    }, 200);
+    }, 100);
 
     return () => window.clearInterval(intervalId);
   }, [pathname, searchParams]);

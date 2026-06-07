@@ -1,4 +1,3 @@
-import { getAnalytics, isSupported } from "firebase/analytics";
 import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
@@ -19,16 +18,6 @@ export function isFirebaseConfigured() {
 }
 
 const app = initializeApp(firebaseConfig);
-
-if (typeof window !== "undefined") {
-  isSupported()
-    .then((supported) => {
-      if (supported) {
-        getAnalytics(app);
-      }
-    })
-    .catch(() => undefined);
-}
 
 const firestore = getFirestore(app);
 const storage = getStorage(app);
