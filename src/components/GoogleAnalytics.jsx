@@ -1,6 +1,8 @@
+import GoogleAnalyticsRouteTracker from "@/components/GoogleAnalyticsRouteTracker";
 import Script from "next/script";
+import { Suspense } from "react";
 
-const GA_MEASUREMENT_ID = "G-32R7GHP6H5";
+export const GA_MEASUREMENT_ID = "G-32R7GHP6H5";
 
 export default function GoogleAnalytics() {
   return (
@@ -17,6 +19,9 @@ export default function GoogleAnalytics() {
           gtag('config', '${GA_MEASUREMENT_ID}');
         `}
       </Script>
+      <Suspense fallback={null}>
+        <GoogleAnalyticsRouteTracker />
+      </Suspense>
     </>
   );
 }
