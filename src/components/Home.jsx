@@ -9,7 +9,6 @@ import { firestore, isFirebaseConfigured, storage } from "@/lib/firebase";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast, ToastContainer } from "react-toastify";
 
@@ -98,7 +97,6 @@ export default function Home() {
   const [aboutStatValues, setAboutStatValues] = useState(() => HOME_ABOUT_STATS.map(() => 0));
   const [aboutStatsStarted, setAboutStatsStarted] = useState(false);
   const aboutStatsRef = useRef(null);
-  const router = useRouter();
   const expirationOptions = ["1 hr", "3 hrs", "5 hrs", "10 hrs", "24 hrs", "48 hrs", "2 days", "4 days", "7 days"];
 
   const calculateExpirationTimestamp = () => {
@@ -177,7 +175,7 @@ export default function Home() {
             return;
           }
         } else {
-          router.push(`/${pageName}`);
+          window.location.assign(`/${pageName}`);
           return;
         }
       }
@@ -198,9 +196,9 @@ export default function Home() {
         });
 
         toast.success("Domain created successfully!");
-        router.push(`/${pageName}`);
+        window.location.assign(`/${pageName}`);
       } else {
-        router.push(`/${pageName}`);
+        window.location.assign(`/${pageName}`);
       }
     } catch (error) {
       console.error("Domain creation failed:", error);

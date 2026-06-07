@@ -3,13 +3,11 @@
 import { deleteExpiredDocument, isDocumentExpired } from "@/lib/documentExpiry";
 import { firestore, storage } from "@/lib/firebase";
 import { doc, getDoc, setDoc } from "firebase/firestore";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "react-toastify";
 
 export default function HomeHeroBlock({ badge, title, subtext, sectionId = "home-hero" }) {
   const [domainName, setDomainName] = useState("");
-  const router = useRouter();
 
   const handleSubmit = async () => {
     const name = domainName.trim().toLowerCase();
@@ -37,7 +35,7 @@ export default function HomeHeroBlock({ badge, title, subtext, sectionId = "home
             return;
           }
         } else {
-          router.push(`/${name}`);
+          window.location.assign(`/${name}`);
           return;
         }
       }
@@ -56,9 +54,9 @@ export default function HomeHeroBlock({ badge, title, subtext, sectionId = "home
         });
 
         toast.success("Domain created successfully!");
-        router.push(`/${name}`);
+        window.location.assign(`/${name}`);
       } else {
-        router.push(`/${name}`);
+        window.location.assign(`/${name}`);
       }
     } catch {
       toast.error("Error setting document settings.");
