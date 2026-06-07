@@ -1,7 +1,6 @@
 "use client";
 
 import { SITE_LOGO_SVG_PATH } from "@/lib/siteMetadata";
-import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 
@@ -11,13 +10,13 @@ export default function SiteHeader() {
   return (
     <header className="home-v2-nav">
       <Link href="/" className="home-v2-brand" onClick={() => setMobileMenuOpen(false)}>
-        <Image
+        <img
           src={SITE_LOGO_SVG_PATH}
           alt="NoLogin"
           width={28}
           height={28}
           className="home-v2-brand-logo"
-          unoptimized
+          fetchPriority="high"
         />
         <span>NoLogin</span>
       </Link>

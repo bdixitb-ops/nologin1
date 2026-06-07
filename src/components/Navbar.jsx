@@ -3,7 +3,6 @@
 import { SITE_LOGO_SVG_PATH } from "@/lib/siteMetadata";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import Image from "next/image";
 
 const Navbar = () => {
   const pathname = usePathname();
@@ -35,13 +34,12 @@ const Navbar = () => {
       {!isTextEditor && (
         <>
           <div className="navbar-left">
-            <Image
+            <img
               className="logo"
               src={SITE_LOGO_SVG_PATH}
               alt="NoLogin"
               width={44}
               height={44}
-              unoptimized
             />
             <div className="navbar-title">
               <span className="no">No</span>

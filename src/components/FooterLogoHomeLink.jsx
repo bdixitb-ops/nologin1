@@ -1,7 +1,6 @@
 "use client";
 
 import { SITE_LOGO_SVG_PATH } from "@/lib/siteMetadata";
-import Image from "next/image";
 import { usePathname } from "next/navigation";
 
 export default function FooterLogoHomeLink() {
@@ -19,13 +18,12 @@ export default function FooterLogoHomeLink() {
         }
       }}
     >
-      <Image
+      <img
         src={SITE_LOGO_SVG_PATH}
         alt=""
         width={44}
         height={44}
         className="home-v2-footer-logo"
-        unoptimized
       />
     </a>
   );
