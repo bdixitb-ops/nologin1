@@ -1,6 +1,8 @@
+import GoogleAnalytics from "@/components/GoogleAnalytics";
 import SiteJsonLd from "@/components/SiteJsonLd";
 import "bootstrap/dist/css/bootstrap.min.css";
 import {
+  GOOGLE_ADSENSE_ACCOUNT,
   SITE_DESCRIPTION,
   SITE_KEYWORDS,
   SITE_NAME,
@@ -82,6 +84,7 @@ export const metadata: Metadata = {
   },
   other: {
     "mobile-web-app-capable": "yes",
+    "google-adsense-account": GOOGLE_ADSENSE_ACCOUNT,
   },
 };
 
@@ -97,6 +100,7 @@ export default function RootLayout({
       data-scroll-behavior="smooth"
     >
       <body suppressHydrationWarning>
+        <GoogleAnalytics />
         <SiteJsonLd />
         {children}
       </body>

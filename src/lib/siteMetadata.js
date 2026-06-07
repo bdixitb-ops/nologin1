@@ -1,5 +1,6 @@
 export const SITE_URL = "https://nologin.in";
 export const SITE_NAME = "NoLogin";
+export const GOOGLE_ADSENSE_ACCOUNT = "ca-pub-4787043505524485";
 /** Transparent vector logo for in-app UI (header, footer, navbar) */
 export const SITE_LOGO_SVG_PATH = "/nologin-logo-icon.svg";
 export const SITE_TAGLINE = "Instant File & Text Sharing Without Login";
@@ -33,7 +34,7 @@ export const SITE_OG_IMAGE_PATH = "/android-chrome-512x512.png";
 export const SITE_OG_IMAGE_URL = `${SITE_URL}${SITE_OG_IMAGE_PATH}`;
 
 export const siteOgImage = {
-  url: SITE_OG_IMAGE_PATH,
+  url: SITE_OG_IMAGE_URL,
   width: 512,
   height: 512,
   alt: SITE_NAME,
@@ -45,7 +46,7 @@ export const shareImageMetadata = {
   },
   twitter: {
     card: "summary_large_image",
-    images: [SITE_OG_IMAGE_PATH],
+    images: [SITE_OG_IMAGE_URL],
   },
 };
 
