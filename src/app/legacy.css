@@ -2112,11 +2112,14 @@ body:has(.resource-page) .home-v2-footer {
 }
 
 .home-v2-nav {
+  --home-v2-nav-height: 72px;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  min-height: var(--home-v2-nav-height);
   padding: 17px 45px 17px 22px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  box-sizing: border-box;
 }
 
 .home-v2-brand {
@@ -2187,6 +2190,19 @@ body:has(.resource-page) .home-v2-footer {
   max-width: 645px;
   margin: 60px auto 0;
   padding: 0 16px 45px;
+}
+
+/* Home landing: hero alone on first screen; about+ below on scroll */
+.home-v2-shell > .home-v2-body:first-child {
+  min-height: calc(100svh - var(--home-v2-nav-height, 72px));
+  min-height: calc(100dvh - var(--home-v2-nav-height, 72px));
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  margin-top: 0;
+  padding-top: clamp(28px, 5vh, 64px);
+  padding-bottom: clamp(28px, 5vh, 64px);
+  box-sizing: border-box;
 }
 
 .home-v2-badge {
@@ -3176,6 +3192,14 @@ body:has(.resource-page) .home-v2-footer {
     margin-top: 100px;
     padding: 0 14px 80px;
     max-width: 100%;
+  }
+
+  .home-v2-shell > .home-v2-body:first-child {
+    margin-top: 0;
+    min-height: calc(100svh - 56px);
+    min-height: calc(100dvh - 56px);
+    padding-top: 32px;
+    padding-bottom: 48px;
   }
 
   .home-v2-badge {

@@ -66,15 +66,26 @@ export function storagePathFromDownloadUrl(url) {
 
 export async function deleteFileFromStorage(storage, domain, file) {
   const fileName = file?.name || file?.fileName;
-  const candidates = new Set();
+  if (!fileName) {
+    return;
+  }
 
+  if (typeof window !== "undefined") {
+    const params = new URLSearchParams({ domain, file: fileName });
+    const response = await fetch(`/api/upload?${params.toString()}`, { method: "DELETE" });
+    if (!response.ok) {
+      const data = await response.json().catch(() => ({}));
+      throw new Error(data.error || "Could not delete file.");
+    }
+    return;
+  }
+
+  const candidates = new Set();
   const storagePath = storagePathFromDownloadUrl(file?.url);
   if (storagePath) {
     candidates.add(storagePath);
   }
-  if (fileName) {
-    candidates.add(`files/${domain}/${fileName}`);
-  }
+  candidates.add(`files/${domain}/${fileName}`);
 
   for (const path of candidates) {
     try {

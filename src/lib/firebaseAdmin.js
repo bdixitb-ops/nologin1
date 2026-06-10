@@ -80,3 +80,12 @@ export function getFirebaseAdminBucket() {
 
   return admin.storage(app).bucket();
 }
+
+export function getFirebaseAdminFirestore() {
+  const app = getFirebaseAdminApp();
+  if (!app) {
+    return null;
+  }
+
+  return admin.firestore(app);
+}

@@ -1,0 +1,17 @@
+rules_version = '2';
+
+// Deploy in Firebase Console -> Storage -> Rules, or: firebase deploy --only storage
+// Blocks direct client SDK uploads/deletes. Uploads must use /api/upload (signed URLs).
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /files/{domain}/{fileName} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    match /{allPaths=**} {
+      allow read: if true;
+      allow write: if false;
+    }
+  }
+}

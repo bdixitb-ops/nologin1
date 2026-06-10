@@ -61,12 +61,6 @@ export default function SiteFooter() {
       <div className="home-v2-footer-bottom">
         <p className="home-v2-footer-bottom-line">© 2026 NoLogin. All rights reserved.</p>
         <p className="home-v2-footer-bottom-line">Made in Bengaluru 🇮🇳</p>
-        <p className="home-v2-footer-bottom-line">
-          Built by{" "}
-          <a href="https://www.linkedin.com/in/deekshith2912/" target="_blank" rel="noopener noreferrer">
-            Deekshith B
-          </a>
-        </p>
       </div>
     </footer>
   );

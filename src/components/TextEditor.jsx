@@ -2,7 +2,6 @@
 
 import {
   deleteExpiredDocument,
-  deleteFileFromStorage,
   EXPIRATION_OPTIONS,
   expirationTimestampForLabel,
   isDocumentExpired,
@@ -10,6 +9,13 @@ import {
 } from "@/lib/documentExpiry";
 import { downloadStorageFile } from "@/lib/downloadFile";
 import { firestore, storage } from "@/lib/firebase";
+import { MAX_FILE_SIZE_BYTES, MAX_FILES_PER_DOMAIN } from "@/lib/uploadLimits";
+import {
+  completeUpload,
+  deleteUploadedFile,
+  prepareUpload,
+  uploadFileToSignedUrl,
+} from "@/lib/uploadClient";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import FileUploadIcon from "@mui/icons-material/FileUpload";
 import HomeOutlinedIcon from "@mui/icons-material/HomeOutlined";
@@ -19,7 +25,6 @@ import InsertDriveFileOutlinedIcon from "@mui/icons-material/InsertDriveFileOutl
 import { TextField } from "@mui/material";
 import bcrypt from "bcryptjs";
 import { doc, getDoc, setDoc } from "firebase/firestore";
-import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -49,6 +54,7 @@ export default function TextEditor({ domainName }) {
   const [activeTab, setActiveTab] = useState("text");
   const [isDocumentLoading, setIsDocumentLoading] = useState(true);
   const fileInputRef = useRef();
+  const sessionLockPasswordRef = useRef("");
   const lastLockedToastAtRef = useRef(0);
   const documentLoadedRef = useRef(false);
   const router = useRouter();
@@ -296,6 +302,7 @@ export default function TextEditor({ domainName }) {
       toast.error("Incorrect password.");
       return;
     }
+    sessionLockPasswordRef.current = lockPasswordInput.trim();
     setLockPasswordInput("");
     setIsUnlockModalOpen(false);
     if (sessionEditable) {
@@ -311,6 +318,7 @@ export default function TextEditor({ domainName }) {
     setIsLocked(false);
     setLockPassword("");
     setSessionEditable(false);
+    sessionLockPasswordRef.current = "";
     try {
       await persistDocument({ isLocked: false, lockPassword: "" });
       toast.success("Edit lock removed. Page is editable again.");
@@ -335,42 +343,60 @@ export default function TextEditor({ domainName }) {
   const handleFileChange = async (e) => {
     if (!e.target.files?.[0]) return;
     const file = e.target.files[0];
-    const maxFiles = 5;
-    const maxFileSizeBytes = 100 * 1024 * 1024;
 
     if (isLocked && !sessionEditable) {
       notifyLockedForEdit();
       return;
     }
-    if (file.size > maxFileSizeBytes) {
+    if (file.size > MAX_FILE_SIZE_BYTES) {
       toast.error("File size exceeds the 100MB limit. Please upload a smaller file.");
       return;
     }
-    if (files.length >= maxFiles) {
-      toast.error("You can only upload up to 5 files per domain.");
+    if (files.length >= MAX_FILES_PER_DOMAIN && !files.some((entry) => entry.name === file.name)) {
+      toast.error(`You can only upload up to ${MAX_FILES_PER_DOMAIN} files per domain.`);
       return;
     }
 
     setIsUploading(true);
     try {
-      const fileRef = ref(storage, `files/${domainName}/${file.name}`);
-      await uploadBytes(fileRef, file);
-      const url = await getDownloadURL(fileRef);
-      const uploadedFile = { name: file.name, url, uploadedAt: Date.now() };
-      const updatedFiles = [...files, uploadedFile];
+      const lockPassword = isLocked ? sessionLockPasswordRef.current : "";
+      const prepared = await prepareUpload({
+        domain: domainName,
+        fileName: file.name,
+        fileSize: file.size,
+        contentType: file.type,
+        lockPassword,
+      });
+      await uploadFileToSignedUrl(prepared.uploadUrl, file);
+      const uploadedFile = await completeUpload({
+        domain: domainName,
+        fileName: file.name,
+        lockPassword,
+      });
+      const updatedFiles = files.some((entry) => entry.name === file.name)
+        ? files.map((entry) => (entry.name === file.name ? uploadedFile : entry))
+        : [...files, uploadedFile];
       setFiles(updatedFiles);
       await persistDocument({ files: updatedFiles });
       toast.success("File uploaded successfully!");
     } catch (error) {
-      handlePersistError(error, "Error uploading file.");
+      if (error?.message) {
+        toast.error(error.message);
+      } else {
+        handlePersistError(error, "Error uploading file.");
+      }
     } finally {
       setIsUploading(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
     }
   };
 
   const handleDeleteFile = async (file) => {
     try {
-      await deleteFileFromStorage(storage, domainName, file);
+      const lockPassword = isLocked ? sessionLockPasswordRef.current : "";
+      await deleteUploadedFile(domainName, file.name, lockPassword);
       const updatedFiles = files.filter((f) => f.name !== file.name);
       setFiles(updatedFiles);
       await persistDocument({ files: updatedFiles });
