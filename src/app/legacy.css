@@ -2200,56 +2200,9 @@ body:has(.resource-page) .home-v2-footer {
   flex-direction: column;
   justify-content: center;
   margin-top: 0;
-  width: 100%;
-  max-width: clamp(645px, 52vw, 900px);
   padding-top: clamp(28px, 5vh, 64px);
   padding-bottom: clamp(28px, 5vh, 64px);
   box-sizing: border-box;
-}
-
-/* Scale hero content up on large / ultrawide screens (fluid, capped) */
-.home-v2-shell > .home-v2-body:first-child .home-v2-badge {
-  font-size: clamp(14px, 0.55vw + 0.7rem, 20px);
-  padding: clamp(5px, 0.45vw, 8px) clamp(12px, 1vw, 20px);
-  margin-bottom: clamp(16px, 2.5vh, 34px);
-}
-
-.home-v2-shell > .home-v2-body:first-child .home-v2-title {
-  font-size: clamp(36px, 2.8vw + 1.35rem, 72px);
-  max-width: none;
-  margin-bottom: clamp(4px, 1vh, 12px);
-}
-
-.home-v2-shell > .home-v2-body:first-child .home-v2-subtext-muted {
-  font-size: clamp(16px, 0.95vw + 0.65rem, 26px);
-  margin-bottom: clamp(24px, 3.5vh, 52px);
-  line-height: 1.55;
-}
-
-.home-v2-shell > .home-v2-body:first-child .home-v2-input-row {
-  max-width: clamp(500px, 40vw, 760px);
-  border-radius: clamp(10px, 0.55vw, 14px);
-}
-
-.home-v2-shell > .home-v2-body:first-child .home-v2-prefix {
-  font-size: clamp(16px, 0.85vw + 0.55rem, 24px);
-  padding: clamp(10px, 1.1vh, 16px) clamp(14px, 1.1vw, 24px);
-}
-
-.home-v2-shell > .home-v2-body:first-child .home-v2-input-row input {
-  font-size: clamp(16px, 0.8vw + 0.55rem, 22px);
-  padding: clamp(10px, 1.1vh, 16px) clamp(14px, 1.1vw, 24px);
-}
-
-.home-v2-shell > .home-v2-body:first-child .home-v2-hero-actions {
-  max-width: clamp(500px, 40vw, 760px);
-  margin-top: clamp(12px, 1.8vh, 24px);
-}
-
-.home-v2-shell > .home-v2-body:first-child .home-v2-submit-btn {
-  font-size: clamp(16px, 0.75vw + 0.55rem, 22px);
-  padding: clamp(10px, 1.1vh, 16px) clamp(18px, 1.8vw, 32px);
-  border-radius: clamp(10px, 0.55vw, 14px);
 }
 
 .home-v2-badge {
