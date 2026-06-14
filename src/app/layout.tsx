@@ -1,4 +1,5 @@
 import GoogleAnalytics from "@/components/GoogleAnalytics";
+import SiteAnnouncementMarquee from "@/components/SiteAnnouncementMarquee";
 import SiteJsonLd from "@/components/SiteJsonLd";
 import "bootstrap/dist/css/bootstrap.min.css";
 import {
@@ -102,6 +103,7 @@ export default function RootLayout({
       <body suppressHydrationWarning>
         <GoogleAnalytics />
         <SiteJsonLd />
+        <SiteAnnouncementMarquee />
         {children}
       </body>
     </html>
