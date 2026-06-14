@@ -36,5 +36,7 @@ export async function POST(request) {
     domain: parsed.domain,
     fileName: parsed.fileName,
     maxBytes: signed.maxBytes,
+    contentType: signed.contentType,
+    contentLengthRange: signed.contentLengthRange,
   });
 }

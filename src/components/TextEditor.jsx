@@ -367,7 +367,10 @@ export default function TextEditor({ domainName }) {
         contentType: file.type,
         lockPassword,
       });
-      await uploadFileToSignedUrl(prepared.uploadUrl, file);
+      await uploadFileToSignedUrl(prepared.uploadUrl, file, {
+        contentType: prepared.contentType,
+        contentLengthRange: prepared.contentLengthRange,
+      });
       const uploadedFile = await completeUpload({
         domain: domainName,
         fileName: file.name,

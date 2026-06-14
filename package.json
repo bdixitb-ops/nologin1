@@ -10,7 +10,8 @@
     "cleanup:storage-old": "node scripts/delete-old-storage-files.js",
     "report:file-sizes": "node scripts/rank-uploaded-file-sizes.js",
     "report:storage-usage": "node scripts/analyze-storage-usage.js",
-    "cleanup:domain-storage": "node scripts/delete-domain-storage.js"
+    "cleanup:domain-storage": "node scripts/delete-domain-storage.js",
+    "configure:storage-cors": "node scripts/configure-storage-cors.js"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",

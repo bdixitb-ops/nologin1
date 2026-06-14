@@ -51,17 +51,24 @@ export function enforcePrepareRateLimits(request, domain) {
 
 export async function createSignedUploadUrl(bucket, storagePath, contentType, fileSize) {
   const fileRef = bucket.file(storagePath);
+  const contentLengthRange = `1,${fileSize}`;
   const [uploadUrl] = await fileRef.getSignedUrl({
     version: "v4",
     action: "write",
     expires: Date.now() + SIGNED_UPLOAD_TTL_MS,
     contentType: contentType || "application/octet-stream",
     extensionHeaders: {
-      "x-goog-content-length-range": `1,${MAX_FILE_SIZE_BYTES}`,
+      "x-goog-content-length-range": contentLengthRange,
     },
   });
 
-  return { uploadUrl, storagePath, maxBytes: fileSize };
+  return {
+    uploadUrl,
+    storagePath,
+    maxBytes: fileSize,
+    contentType: contentType || "application/octet-stream",
+    contentLengthRange,
+  };
 }
 
 export async function validatePrepareRequest(body) {
