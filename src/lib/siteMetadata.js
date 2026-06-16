@@ -1,8 +1,5 @@
 export const SITE_URL = "https://nologin.in";
 export const SITE_NAME = "NoLogin";
-/** Set to empty string to hide the top announcement marquee */
-export const SITE_ANNOUNCEMENT =
-  "Files uploads are working again. Sorry for the inconvenience.";
 export const GOOGLE_ADSENSE_ACCOUNT = "ca-pub-4787043505524485";
 /** Transparent vector logo for in-app UI (header, footer, navbar) */
 export const SITE_LOGO_SVG_PATH = "/nologin-logo-icon.svg";
