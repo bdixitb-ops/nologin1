@@ -22,6 +22,7 @@ export default function DontpadAlternative() {
         kicker: "WHAT IS DONTPAD",
         title: "Simple idea. Stuck in 2011.",
         paragraphs: [
+          "Looking for a Dontpad alternative? NoLogin gives you the same no-login page-name sharing — plus file uploads, password protection, edit lock, and expiry control. Free, no account needed on either end.",
           "Dontpad is a Brazilian text-sharing tool built around a simple idea — type a word after dontpad.com/ and you get a shared notepad. No login required. Anyone with the URL can read and edit the content.",
           "It became popular in colleges and classrooms across Brazil and India for exactly that reason. Fast, simple, no friction.",
           "But Dontpad has not changed much since it launched in 2011. And the gaps in what it offers have become more obvious as people try to use it for more than basic text sharing.",

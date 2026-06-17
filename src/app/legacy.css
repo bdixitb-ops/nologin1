@@ -3479,6 +3479,7 @@ body:has(.resource-page) .home-v2-footer {
 
 .upload-files-page .home-v2-title,
 .dontpad-page .home-v2-title,
+.best-sharing-page .home-v2-title,
 .pastebin-page .home-v2-title {
   white-space: normal;
   max-width: 720px;
