@@ -50,6 +50,7 @@ const corsConfiguration = [
       "https://nologin.in",
       "https://www.nologin.in",
       "https://nologinin.vercel.app",
+      "https://nologin1.vercel.app",
     ],
     method: ["GET", "PUT", "HEAD", "DELETE", "POST", "OPTIONS"],
     responseHeader: [
