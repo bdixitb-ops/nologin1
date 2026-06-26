@@ -710,6 +710,86 @@
   color: #fff;
 }
 
+.editor-container .modal-box.editor-time-modal h4 {
+  margin: 0;
+}
+
+.editor-modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 18px;
+  text-align: left;
+}
+
+.editor-time-lock-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  flex-shrink: 0;
+  margin: 0;
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: var(--editor-border-width) solid var(--editor-border);
+  background: #09090f;
+  color: #c8c2ff;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  line-height: 1.2;
+  cursor: pointer;
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease,
+    color 0.2s ease;
+}
+
+.editor-time-lock-toggle:hover {
+  border-color: var(--editor-border-strong);
+  background: #14141c;
+  color: #fff;
+}
+
+.editor-time-lock-toggle.is-active {
+  border-color: var(--editor-border-strong);
+  background: #1e1e28;
+  color: #fff;
+  box-shadow: inset 0 0 0 1px rgba(124, 116, 255, 0.16);
+}
+
+.editor-time-lock-toggle-icon {
+  width: 16px !important;
+  height: 16px !important;
+  font-size: 16px !important;
+}
+
+.editor-modal-locked-note {
+  margin: 0 0 16px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: var(--editor-border-width) solid var(--editor-border);
+  background: rgba(106, 92, 255, 0.08);
+  color: #d4d4dc;
+  line-height: 1.55;
+  font-size: 14px;
+  text-align: left;
+}
+
+.editor-modal-locked-note--hint {
+  background: rgba(106, 92, 255, 0.05);
+  color: #b8b0ff;
+}
+
+.editor-container .modal-box .editor-modal-locked-note + .MuiFormControl-root {
+  margin-top: 0;
+}
+
+.editor-container .modal-box .editor-modal-time-select + .MuiFormControl-root {
+  margin-top: 16px;
+}
+
 .editor-container .modal-box p {
   margin: 0;
   color: #d4d4dc;

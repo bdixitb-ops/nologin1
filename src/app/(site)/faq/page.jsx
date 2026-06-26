@@ -5,7 +5,7 @@ import { shareImageMetadata, siteUrl } from "@/lib/siteMetadata";
 export const metadata = {
   title: "FAQ",
   description:
-    "Answers about NoLogin — page names, files, privacy, password protection, edit lock, and auto expiry. No account needed.",
+    "Answers about NoLogin — page names, files, privacy, password protection, edit lock, time lock, and auto expiry. No account needed.",
   alternates: {
     canonical: siteUrl("/faq"),
   },

@@ -59,6 +59,12 @@ const FAQS = [
     a: "Edit Lock makes your page read-only. Once enabled, visitors can view your content, copy text and download files — but they cannot edit, delete or upload anything. Your content stays exactly as you left it. Use it when you want to share something that should not be changed by anyone who opens it.",
   },
   {
+    category: "Privacy & security",
+    num: "04",
+    q: "What is Time Lock?",
+    a: "Time Lock is an optional setting inside Set time. Turn on Time lock and set a password — after that, nobody can change the expiry timer unless they enter that password. Without it, anyone who knows your page name could shorten or extend your expiry. With Time lock on, you can still visit later, unlock with your password, and extend the timer whenever you need.",
+  },
+  {
     category: "Expiry & deletion",
     num: "05",
     q: "What is the expiry timer and what happens when it runs out?",

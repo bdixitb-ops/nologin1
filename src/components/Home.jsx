@@ -596,6 +596,14 @@ export default function Home() {
               </p>
             </details>
             <details className="home-v2-faq-item">
+              <summary>What is Time Lock?</summary>
+              <p>
+                An optional setting in Set time. When enabled, only someone with the time-lock password can change the
+                expiry timer. Use it to stop others from shortening or extending your expiry — you can still unlock and
+                extend it whenever you need.
+              </p>
+            </details>
+            <details className="home-v2-faq-item">
               <summary>What is the Set time?</summary>
               <p>
                 Controls how long your content stays on the page. Once time runs out, all text and files are

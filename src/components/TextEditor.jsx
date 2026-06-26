@@ -51,10 +51,17 @@ export default function TextEditor({ domainName }) {
   const [expirationTime, setExpirationTime] = useState("48 hrs");
   const [isTimeModalOpen, setIsTimeModalOpen] = useState(false);
   const [timeDraft, setTimeDraft] = useState("48 hrs");
+  const [isTimeLocked, setIsTimeLocked] = useState(false);
+  const [timeLockPassword, setTimeLockPassword] = useState("");
+  const [timeLockPasswordInput, setTimeLockPasswordInput] = useState("");
+  const [sessionTimeEditable, setSessionTimeEditable] = useState(false);
+  const [timeLockEnableDraft, setTimeLockEnableDraft] = useState(false);
+  const [timeLockDisableDraft, setTimeLockDisableDraft] = useState(false);
   const [activeTab, setActiveTab] = useState("text");
   const [isDocumentLoading, setIsDocumentLoading] = useState(true);
   const fileInputRef = useRef();
   const sessionLockPasswordRef = useRef("");
+  const sessionTimeLockPasswordRef = useRef("");
   const lastLockedToastAtRef = useRef(0);
   const documentLoadedRef = useRef(false);
   const router = useRouter();
@@ -65,8 +72,12 @@ export default function TextEditor({ domainName }) {
     setFiles([]);
     setIsProtected(false);
     setIsLocked(false);
+    setIsTimeLocked(false);
+    setTimeLockPassword("");
     setIsAuthenticated(false);
     setSessionEditable(false);
+    setSessionTimeEditable(false);
+    sessionTimeLockPasswordRef.current = "";
   }, []);
 
   const checkAndHandleExpiration = useCallback(async () => {
@@ -106,6 +117,8 @@ export default function TextEditor({ domainName }) {
           documentLoadedRef.current = true;
           setIsProtected(!!data.passwordSet);
           setExpirationTime(labelFromExpirationTimestamp(data.expirationTimestamp));
+          setIsTimeLocked(!!data.isTimeLocked);
+          setTimeLockPassword(data.timeLockPassword || "");
           if (!data.passwordSet) {
             setIsLocked(data.isLocked || false);
             setLockPassword(data.lockPassword || "");
@@ -179,6 +192,8 @@ export default function TextEditor({ domainName }) {
           setIsLocked(data.isLocked || false);
           setLockPassword(data.lockPassword || "");
           setExpirationTime(labelFromExpirationTimestamp(data.expirationTimestamp));
+          setIsTimeLocked(!!data.isTimeLocked);
+          setTimeLockPassword(data.timeLockPassword || "");
           setIsAuthenticated(true);
           toast.success("Password verified!");
         } else {
@@ -215,15 +230,118 @@ export default function TextEditor({ domainName }) {
     }
   };
 
-  const handleApplyExpiration = async () => {
-    const label = timeDraft;
+  const resetTimeModalDrafts = () => {
+    setTimeLockPasswordInput("");
+    setTimeLockEnableDraft(false);
+    setTimeLockDisableDraft(false);
+  };
+
+  const closeTimeModal = () => {
     setIsTimeModalOpen(false);
+    resetTimeModalDrafts();
+  };
+
+  const openTimeModal = () => {
+    setTimeDraft(expirationTime);
+    resetTimeModalDrafts();
+    setIsTimeModalOpen(true);
+    setIsPasswordModalOpen(false);
+  };
+
+  const handleApplyExpiration = async () => {
+    if (isTimeLocked && !sessionTimeEditable) {
+      toast.error("Expiry time is locked. Unlock with your time-lock password to change it.");
+      return;
+    }
+
+    const label = timeDraft;
+
+    if (timeLockEnableDraft) {
+      if (!timeLockPasswordInput.trim()) {
+        toast.error("Enter a password to enable time lock.");
+        return;
+      }
+      try {
+        const hashedPassword = bcrypt.hashSync(timeLockPasswordInput.trim(), 10);
+        await persistDocument({
+          expirationTimestamp: expirationTimestampForLabel(label),
+          isTimeLocked: true,
+          timeLockPassword: hashedPassword,
+        });
+        setExpirationTime(label);
+        setIsTimeLocked(true);
+        setTimeLockPassword(hashedPassword);
+        sessionTimeLockPasswordRef.current = timeLockPasswordInput.trim();
+        setSessionTimeEditable(true);
+        closeTimeModal();
+        toast.success(`Page will expire in ${label}. Time lock enabled.`);
+      } catch (error) {
+        handlePersistError(error, "Error updating expiry time.");
+      }
+      return;
+    }
+
     setExpirationTime(label);
+    closeTimeModal();
     try {
       await persistDocument({ expirationTimestamp: expirationTimestampForLabel(label) });
       toast.success(`Page will expire in ${label}.`);
     } catch (error) {
       handlePersistError(error, "Error updating expiry time.");
+    }
+  };
+
+  const handleTimeLockToggleClick = () => {
+    if (isTimeLocked || timeLockEnableDraft) {
+      if (!isTimeLocked && timeLockEnableDraft) {
+        setTimeLockEnableDraft(false);
+        setTimeLockPasswordInput("");
+        return;
+      }
+      setTimeLockDisableDraft(true);
+      setTimeLockEnableDraft(false);
+      setTimeLockPasswordInput("");
+      return;
+    }
+    setTimeLockEnableDraft(true);
+    setTimeLockPasswordInput("");
+  };
+
+  const handleUnlockTimeForSession = () => {
+    if (!timeLockPasswordInput.trim()) {
+      toast.error("Enter the time-lock password.");
+      return;
+    }
+    if (!bcrypt.compareSync(timeLockPasswordInput, timeLockPassword)) {
+      toast.error("Incorrect password.");
+      return;
+    }
+    sessionTimeLockPasswordRef.current = timeLockPasswordInput.trim();
+    setTimeLockPasswordInput("");
+    setTimeLockDisableDraft(false);
+    setSessionTimeEditable(true);
+    toast.success("You can change expiry for this session.");
+  };
+
+  const handleDisableTimeLock = async () => {
+    if (!timeLockPasswordInput.trim()) {
+      toast.error("Enter the time-lock password.");
+      return;
+    }
+    if (!bcrypt.compareSync(timeLockPasswordInput, timeLockPassword)) {
+      toast.error("Incorrect password.");
+      return;
+    }
+    try {
+      await persistDocument({ isTimeLocked: false, timeLockPassword: "" });
+      setIsTimeLocked(false);
+      setTimeLockPassword("");
+      setSessionTimeEditable(false);
+      sessionTimeLockPasswordRef.current = "";
+      resetTimeModalDrafts();
+      toast.success("Time lock removed. Anyone can change expiry again.");
+    } catch (error) {
+      handlePersistError(error, "Error removing time lock.");
     }
   };
 
@@ -621,12 +739,8 @@ export default function TextEditor({ domainName }) {
 
                   <button
                     type="button"
-                    className="editor-toolbar-btn editor-set-time-btn"
-                    onClick={() => {
-                      setTimeDraft(expirationTime);
-                      setIsTimeModalOpen(true);
-                      setIsPasswordModalOpen(false);
-                    }}
+                    className={`editor-toolbar-btn editor-set-time-btn ${isTimeLocked ? "is-active" : ""}`}
+                    onClick={openTimeModal}
                   >
                     <span className="editor-set-time-label">Set time</span>
                     <span className="editor-set-time-value">{expirationTime}</span>
@@ -727,29 +841,128 @@ export default function TextEditor({ domainName }) {
           )}
 
           {isTimeModalOpen && (
-            <div className="modal-overlay" onClick={(e) => handleModalBackdropClick(e, () => setIsTimeModalOpen(false))}>
-              <div className="modal-box">
-                <h4>Set Page Expiry</h4>
-                <select
-                  className="editor-modal-time-select"
-                  value={timeDraft}
-                  aria-label="Choose how long the page stays online"
-                  onChange={(e) => setTimeDraft(e.target.value)}
-                >
-                  {EXPIRATION_OPTIONS.map((option) => (
-                    <option key={option} value={option}>
-                      {option}
-                    </option>
-                  ))}
-                </select>
-                <div className="modal-actions">
-                  <button onClick={handleApplyExpiration} className="confirm-button confirm-button--primary" type="button">
-                    Apply
-                  </button>
-                  <button onClick={() => setIsTimeModalOpen(false)} className="cancel-button" type="button">
-                    Cancel
+            <div className="modal-overlay" onClick={(e) => handleModalBackdropClick(e, closeTimeModal)}>
+              <div className="modal-box editor-time-modal">
+                <div className="editor-modal-header">
+                  <h4>Set Page Expiry</h4>
+                  <button
+                    type="button"
+                    className={`editor-time-lock-toggle ${isTimeLocked || timeLockEnableDraft ? "is-active" : ""}`}
+                    onClick={handleTimeLockToggleClick}
+                    aria-pressed={isTimeLocked || timeLockEnableDraft}
+                    title="Require a password to change expiry time"
+                  >
+                    <LockIcon className="editor-time-lock-toggle-icon" aria-hidden />
+                    <span>Time lock</span>
                   </button>
                 </div>
+
+                {timeLockDisableDraft ? (
+                  <>
+                    <p className="editor-modal-locked-note">
+                      Enter your time-lock password to allow anyone to change expiry again.
+                    </p>
+                    <TextField
+                      type="password"
+                      label="Time-lock password"
+                      fullWidth
+                      value={timeLockPasswordInput}
+                      onChange={(e) => setTimeLockPasswordInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          handleDisableTimeLock();
+                        }
+                      }}
+                      autoComplete="current-password"
+                    />
+                    <div className="modal-actions">
+                      <button onClick={handleDisableTimeLock} className="confirm-button confirm-button--primary" type="button">
+                        Remove time lock
+                      </button>
+                      <button
+                        onClick={() => {
+                          setTimeLockDisableDraft(false);
+                          setTimeLockPasswordInput("");
+                        }}
+                        className="cancel-button"
+                        type="button"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </>
+                ) : isTimeLocked && !sessionTimeEditable ? (
+                  <>
+                    <p className="editor-modal-locked-note">
+                      Expiry time is locked. Unlock with your time-lock password to change it.
+                    </p>
+                    <TextField
+                      type="password"
+                      label="Time-lock password"
+                      fullWidth
+                      value={timeLockPasswordInput}
+                      onChange={(e) => setTimeLockPasswordInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          handleUnlockTimeForSession();
+                        }
+                      }}
+                      autoComplete="current-password"
+                    />
+                    <div className="modal-actions">
+                      <button onClick={handleUnlockTimeForSession} className="confirm-button confirm-button--primary" type="button">
+                        Unlock
+                      </button>
+                      <button onClick={closeTimeModal} className="cancel-button" type="button">
+                        Cancel
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    {timeLockEnableDraft ? (
+                      <p className="editor-modal-locked-note editor-modal-locked-note--hint">
+                        Set a password so only you can change the expiry time.
+                      </p>
+                    ) : null}
+                    <select
+                      className="editor-modal-time-select"
+                      value={timeDraft}
+                      aria-label="Choose how long the page stays online"
+                      onChange={(e) => setTimeDraft(e.target.value)}
+                    >
+                      {EXPIRATION_OPTIONS.map((option) => (
+                        <option key={option} value={option}>
+                          {option}
+                        </option>
+                      ))}
+                    </select>
+                    {timeLockEnableDraft ? (
+                      <TextField
+                        type="password"
+                        label="Set time-lock password"
+                        fullWidth
+                        value={timeLockPasswordInput}
+                        onChange={(e) => setTimeLockPasswordInput(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            handleApplyExpiration();
+                          }
+                        }}
+                        autoComplete="new-password"
+                        sx={{ mt: 2 }}
+                      />
+                    ) : null}
+                    <div className="modal-actions">
+                      <button onClick={handleApplyExpiration} className="confirm-button confirm-button--primary" type="button">
+                        Apply
+                      </button>
+                      <button onClick={closeTimeModal} className="cancel-button" type="button">
+                        Cancel
+                      </button>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           )}

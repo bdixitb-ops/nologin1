@@ -12,6 +12,10 @@ export const RESOURCE_PAGE_FAQ = [
     a: "Edit Lock makes your page read-only. Visitors can view and copy text or download files, but cannot edit, delete, or upload anything.",
   },
   {
+    q: "What is Time Lock?",
+    a: "An optional setting in Set time. When enabled, only someone with the time-lock password can change the expiry timer. Use it to stop others from shortening or extending your expiry — you can still unlock and extend it whenever you need.",
+  },
+  {
     q: "What is the Set time?",
     a: "Controls how long your content stays on the page. Once time runs out, all text and files are automatically and permanently deleted. Default is 48 hours.",
   },
